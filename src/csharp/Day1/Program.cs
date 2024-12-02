@@ -1,4 +1,6 @@
-﻿namespace Day1;
+﻿using System.Runtime.InteropServices;
+
+namespace Day1;
 
 internal static class Program
 {
@@ -6,13 +8,27 @@ internal static class Program
     {
         var (ids1, ids2) = ReadIds();
 
-        var sum = 0;
-        for (var i = 0; i < ids1.Count; i++)
+        var occurrences = new Dictionary<int, int>();
+        foreach (var id in ids2)
         {
-            sum += Math.Abs(ids1[i] - ids2[i]);
+            CollectionsMarshal.GetValueRefOrAddDefault(occurrences, id, out _)++;
         }
 
-        Console.WriteLine(sum);
+        var sum = 0;
+        var similarity = 0;
+        for (var i = 0; i < ids1.Count; i++)
+        {
+            var id1 = ids1[i];
+            var id2 = ids2[i];
+
+            sum += Math.Abs(id1 - id2);
+            if (occurrences.TryGetValue(id1, out var value))
+            {
+                similarity += id1 * value;
+            }
+        }
+
+        Console.WriteLine($"Sum: {sum} Similarity: {similarity}");
     }
 
     private static (IReadOnlyList<int>, IReadOnlyList<int>) ReadIds() {
