@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::io::{BufRead, BufReader};
+use std::path::PathBuf;
 
 fn main() {
     let (ids_1, ids_2) = get_ids();
@@ -8,6 +9,33 @@ fn main() {
     let (sum, similarity) = get_sum_and_similarity(ids_1, ids_2);
 
     println!("Sum: {} Similarity: {}", sum, similarity);
+}
+
+fn get_ids() -> (Vec<u32>, Vec<u32>) {
+    let file_path: PathBuf = [".", "src", "Inputs.txt"].iter().collect();
+    let file = fs::File::open(file_path).expect("Failed to open inputs file.");
+    let reader = BufReader::new(file);
+
+    let mut ids_1: Vec<u32> = vec![];
+    let mut ids_2: Vec<u32> = vec![];
+
+    for line in reader.lines() {
+        match line {
+            Ok(line_ok) => {
+                let ids_line: Vec<&str> = line_ok.split_whitespace().collect();
+                ids_1.push(ids_line[0].parse::<u32>().expect("Failed to parse id."));
+                ids_2.push(ids_line[1].parse::<u32>().expect("Failed to parse id."));
+            }
+            Err(e) => {
+                eprintln!("{}", e);
+            }
+        }
+    }
+
+    ids_1.sort();
+    ids_2.sort();
+
+    (ids_1, ids_2)
 }
 
 fn get_sum_and_similarity(ids_1: Vec<u32>, ids_2: Vec<u32>) -> (u32, u32) {
@@ -37,36 +65,4 @@ fn get_sum_and_similarity(ids_1: Vec<u32>, ids_2: Vec<u32>) -> (u32, u32) {
     }
 
     (sum, similarity)
-}
-
-fn get_ids() -> (Vec<u32>, Vec<u32>) {
-    let file = fs::File::open("src/Inputs.txt").expect("Failed to open inputs file.");
-    let reader = BufReader::new(file);
-
-    let mut ids_1: Vec<u32> = vec![];
-    let mut ids_2: Vec<u32> = vec![];
-
-    for line in reader.lines() {
-        match line {
-            Ok(line_ok) => {
-                let ids_line: Vec<&str> = line_ok
-                    .split_whitespace()
-                    .into_iter()
-                    .filter(|x| !x.is_empty())
-                    .collect();
-
-                ids_1.push(ids_line[0].parse::<u32>().expect("Failed to parse id."));
-                ids_2.push(ids_line[1].parse::<u32>().expect("Failed to parse id."));
-            }
-            Err(_) => {
-                eprintln!("{}", line.err().unwrap());
-                break;
-            }
-        }
-    }
-
-    ids_1.sort();
-    ids_2.sort();
-
-    (ids_1, ids_2)
 }
