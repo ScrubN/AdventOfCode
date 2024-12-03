@@ -9,14 +9,16 @@ internal static class Program {
         while (sr.ReadLine() is { } line) {
             var numbers = line.Split(' ').Select(int.Parse).ToArray();
 
-            if (CheckSafety(numbers, ref safe)) {
+            if (CheckSafety(numbers)) {
+                safe++;
                 continue;
             }
 
             for (var i = 0; i < numbers.Length; i++) {
                 var numbersList = numbers.ToList();
                 numbersList.RemoveAt(i);
-                if (CheckSafety(numbersList.ToArray(), ref safe)) {
+                if (CheckSafety(numbersList.ToArray())) {
+                    safe++;
                     break;
                 }
             }
@@ -25,48 +27,32 @@ internal static class Program {
         Console.WriteLine(safe);
     }
 
-    private static bool CheckSafety(int[] numbers, ref int safe) {
-        var increasing = false;
-        var decreasing = false;
+    private static bool CheckSafety(int[] numbers) {
+        var ascending = numbers[0] < numbers[1];
         for (var i = 0; i < numbers.Length - 1; i++) {
-            if (!CheckSafetyInner(numbers[i], numbers[i + 1], ref increasing, ref decreasing)) {
+            var a = numbers[i];
+            var b = numbers[i + 1];
+
+            if (a == b) {
                 return false;
             }
 
-            if (i + 1 == numbers.Length - 1) {
-                safe++;
-                return true;
+            if (Math.Abs(a - b) > 3) {
+                return false;
+            }
+
+            if (ascending) {
+                if (a > b) {
+                    return false;
+                }
+            }
+            else {
+                if (a < b) {
+                    return false;
+                }
             }
         }
 
-        return false;
-    }
-
-    private static bool CheckSafetyInner(int a, int b, ref bool increasing, ref bool decreasing) {
-        if (a == b) {
-            return false;
-        }
-
-        if (Math.Abs(a - b) > 3) {
-            return false;
-        }
-
-        var localIncreasing = increasing;
-        if (!increasing && b > a) {
-            localIncreasing = true;
-        }
-
-        var localDecreasing = decreasing;
-        if (!decreasing && b < a) {
-            localDecreasing = true;
-        }
-
-        if (localIncreasing && localDecreasing) {
-            return false;
-        }
-
-        increasing = localIncreasing;
-        decreasing = localDecreasing;
         return true;
     }
 }
