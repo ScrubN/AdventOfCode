@@ -41,18 +41,19 @@ fn check_safe(reports: Vec<Vec<u32>>) -> u32 {
     for levels in reports {
         if is_safe(&levels) {
             safe += 1;
-        } else {
-            let mut i = 0;
-            while i < levels.len() {
-                let mut new_levels = levels.clone();
-                new_levels.remove(i);
-                if is_safe(&new_levels) {
-                    safe += 1;
-                    break;
-                }
+            continue;
+        }
 
-                i += 1;
+        let mut i = 0;
+        while i < levels.len() {
+            let mut new_levels = levels.clone();
+            new_levels.remove(i);
+            if is_safe(&new_levels) {
+                safe += 1;
+                break;
             }
+
+            i += 1;
         }
     }
 
