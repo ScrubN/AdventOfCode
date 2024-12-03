@@ -39,15 +39,27 @@ fn get_reports() -> Vec<Vec<u32>> {
 fn check_safe(reports: Vec<Vec<u32>>) -> u32 {
     let mut safe = 0;
     for levels in reports {
-        if is_safe(levels) {
+        if is_safe(&levels) {
             safe += 1;
+        } else {
+            let mut i = 0;
+            while i < levels.len() {
+                let mut new_levels = levels.clone();
+                new_levels.remove(i);
+                if is_safe(&new_levels) {
+                    safe += 1;
+                    break;
+                }
+
+                i += 1;
+            }
         }
     }
 
     safe
 }
 
-fn is_safe(levels: Vec<u32>) -> bool {
+fn is_safe(levels: &Vec<u32>) -> bool {
     let ascending = levels[0] < *levels.get(1).unwrap();
 
     let mut i = 0;
