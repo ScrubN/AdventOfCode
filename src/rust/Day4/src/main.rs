@@ -10,40 +10,21 @@ fn main() {
     while y < input.len() {
         let mut x = 0;
         while x < input[y].len() {
-            if input[y].as_bytes()[x] as char != 'X' {
+            if x < 1 || y < 1 {
                 x += 1;
                 continue;
             }
 
-            if input[y][x..].starts_with("XMAS") {
-                xmas += 1;
+            if input[y].as_bytes()[x] as char != 'A' {
+                x += 1;
+                continue;
             }
 
-            if input[y][..=x].ends_with("SAMX") {
-                xmas += 1;
-            }
-
-            if is_up(&input, x, y) {
-                xmas += 1;
-            }
-
-            if is_down(&input, x, y) {
-                xmas += 1;
-            }
-
-            if is_up_right(&input, x, y) {
-                xmas += 1;
-            }
-
-            if is_down_left(&input, x, y) {
-                xmas += 1;
-            }
-
-            if is_down_right(&input, x, y) {
-                xmas += 1;
-            }
-
-            if is_up_left(&input, x, y) {
+            if (check_diagonal_forward(&input, "MAS", x + 1, y - 1)
+                || check_diagonal_forward(&input, "SAM", x + 1, y - 1))
+                && (check_diagonal_backward(&input, "MAS", x - 1, y - 1)
+                    || check_diagonal_backward(&input, "SAM", x - 1, y - 1))
+            {
                 xmas += 1;
             }
 
