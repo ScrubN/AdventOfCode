@@ -11,45 +11,30 @@ internal static class Program {
             var line = input[y];
             var xLen = line.Length;
             for (var x = 0; x < xLen; x++) {
-                if (line[x] != 'X') {
-                    continue;
-                }
-
-                if (line.AsSpan(x).StartsWith("XMAS")) {
-                    xmasCount++;
-                }
-
-                if (line.AsSpan(0, x + 1).EndsWith("SAMX")) {
-                    xmasCount++;
-                }
-
-                if (input.Up("XMAS", x, y)) {
-                    xmasCount++;
-                }
-
-                if (input.UpLeft("XMAS", x, y)) {
-                    xmasCount++;
-                }
-
-                if (input.UpRight("XMAS", x, y)) {
-                    xmasCount++;
-                }
-
-                if (input.Down("XMAS", x, y)) {
-                    xmasCount++;
-                }
-
-                if (input.DownLeft("XMAS", x, y)) {
-                    xmasCount++;
-                }
-
-                if (input.DownRight("XMAS", x, y)) {
+                if (IsX_Mas(input, x, y)) {
                     xmasCount++;
                 }
             }
         }
 
         Console.WriteLine(xmasCount);
+    }
+
+    private static bool IsX_Mas(string[] input, int x, int y) {
+        if (input[y][x] != 'A') {
+            return false;
+        }
+
+        if (x == 0 || y == 0 || y + 1 >= input[y].Length || x + 1 >= input.Length) {
+            return false;
+        }
+
+        if ((input.UpLeft("MAS", x + 1, y + 1) || input.UpLeft("SAM", x + 1, y + 1))
+            && (input.UpRight("MAS", x - 1, y + 1) || input.UpRight("SAM", x - 1, y + 1))) {
+            return true;
+        }
+
+        return false;
     }
 
     private static bool UpLeft(this string[] s, string pattern, int x, int y) {
