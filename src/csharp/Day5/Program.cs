@@ -5,17 +5,17 @@ namespace Day5;
 internal static class Program {
     internal static void Main(string[] args) {
         var (pageOrdering, manuals) = GetInput();
-        List<byte[]> validManuals = [];
+        List<byte[]> invalidManuals = [];
 
-        foreach (var pageNumbers in manuals) {
-            var numbers = new HashSet<byte>(pageNumbers);
+        foreach (var manual in manuals) {
+            var numbers = new HashSet<byte>(manual);
             var orderingSlice = pageOrdering
                 .Where(x => numbers.Contains(x.Key))
                 .ToDictionary(x => x.Key, x => x.Value);
 
             var isValid = true;
             HashSet<byte> validated = [];
-            foreach (var number in pageNumbers) {
+            foreach (var number in manual) {
                 if (orderingSlice
                     .Where(x => !validated.Contains(x.Key))
                     .All(x => !x.Value.Contains(number))) {
@@ -27,13 +27,27 @@ internal static class Program {
                 }
             }
 
-            if (isValid) {
-                validManuals.Add(pageNumbers);
+            if (!isValid) {
+                validated.Clear();
+
+                List<byte> sortedManual = [];
+                while (validated.Count < manual.Length) {
+                    foreach (var number in manual.Where(x => !validated.Contains(x))) {
+                        if (orderingSlice
+                            .Where(x => !validated.Contains(x.Key))
+                            .All(x => !x.Value.Contains(number))) {
+                            sortedManual.Add(number);
+                            validated.Add(number);
+                        }
+                    }
+                }
+
+                invalidManuals.Add(sortedManual.ToArray());
             }
         }
 
         var sum = 0;
-        foreach (var manual in validManuals) {
+        foreach (var manual in invalidManuals) {
             sum += manual[manual.Length / 2];
         }
 
