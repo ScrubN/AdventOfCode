@@ -4,7 +4,7 @@ namespace Day6;
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllLines("Inputs.txt");
+        var input = File.ReadAllLines("Inputs.txt").Select(x => x.ToArray()).ToArray();
 
         Point start = default;
         for (var y = 0; y < input.Length; y++) {
@@ -19,11 +19,10 @@ internal static class Program {
         for (var y = 0; y < input.Length; y++) {
             for (var x = 0; x < input[y].Length; x++) {
                 if (input[y][x] == '.') {
-                    // This is awful
                     var old = input[y];
                     var arr = old.ToArray();
                     arr[x] = '#';
-                    input[y] = new string(arr);
+                    input[y] = arr;
                     if (RunLoop(start, input)) {
                         sum++;
                     }
@@ -36,7 +35,7 @@ internal static class Program {
         Console.WriteLine(sum);
     }
 
-    private static bool RunLoop(Point start, string[] input) {
+    private static bool RunLoop(Point start, char[][] input) {
         var uPos = new HashSet<Point>();
         var rPos = new HashSet<Point>();
         var dPos = new HashSet<Point>();
@@ -81,7 +80,7 @@ internal static class Program {
         return false;
     }
 
-    private static Point? MoveUp(string[] input, Point current) {
+    private static Point? MoveUp(char[][] input, Point current) {
         var last = current;
         for (var i = current.Y - 1; i >= 0; i--) {
             if (input[i][current.X] == '#') {
@@ -94,7 +93,7 @@ internal static class Program {
         return null;
     }
 
-    private static Point? MoveDown(string[] input, Point current) {
+    private static Point? MoveDown(char[][] input, Point current) {
         var last = current;
         for (var i = current.Y + 1; i < input.Length; i++) {
             if (input[i][current.X] == '#') {
@@ -107,7 +106,7 @@ internal static class Program {
         return null;
     }
 
-    private static Point? MoveRight(string[] input, Point current) {
+    private static Point? MoveRight(char[][] input, Point current) {
         var last = current;
         for (var i = current.X + 1; i < input[current.Y].Length; i++) {
             if (input[current.Y][i] == '#') {
@@ -119,7 +118,7 @@ internal static class Program {
 
         return null;
     }
-    private static Point? MoveLeft(string[] input, Point current) {
+    private static Point? MoveLeft(char[][] input, Point current) {
         var last = current;
         for (var i = current.X - 1; i >= 0; i--) {
             if (input[current.Y][i] == '#') {
