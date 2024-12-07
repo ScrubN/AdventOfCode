@@ -4,10 +4,7 @@ internal static class Program {
     internal static void Main(string[] args) {
         var input = File.ReadAllLines("Inputs.txt");
 
-        var sum = 0L;
-        foreach (var line in input) {
-            sum += Compute(line);
-        }
+        var sum = input.Sum(Compute);
 
         Console.WriteLine(sum);
     }
@@ -19,26 +16,44 @@ internal static class Program {
             .Select(long.Parse)
             .ToArray();
 
-        for (var mask = 0L; mask < Math.Pow(2, parameters.Length); mask++) {
-            var workingMask = mask;
+        for (var mask = 0L; mask < Math.Pow(3, parameters.Length); mask++) {
             var runningTotal = parameters[0];
-            foreach (var param in parameters.Skip(1)) {
-                var mult = (workingMask & 1) == 1;
-                if (mult) {
-                    runningTotal *= param;
-                }
-                else {
-                    runningTotal += param;
+            var workingMask = mask;
+            for (var i = 1; i < parameters.Length; i++) {
+                var param = parameters[i];
+                var op = workingMask % 3;
+                switch (op) {
+                    case 0:
+                        runningTotal += param;
+                        break;
+                    case 1:
+                        runningTotal *= param;
+                        break;
+                    case 2:
+                        runningTotal = runningTotal * (long)Math.Pow(10, CountDigits(param)) + param;
+                        break;
                 }
 
-                workingMask >>= 1;
+                workingMask /= 3;
             }
 
             if (runningTotal == expected) {
                 return expected;
             }
+
+            mask++;
         }
 
         return 0;
+    }
+
+    private static int CountDigits(long number) {
+        var digits = 0;
+        while (number > 0) {
+            digits++;
+            number /= 10;
+        }
+
+        return digits;
     }
 }
