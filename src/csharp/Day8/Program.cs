@@ -26,33 +26,32 @@ internal static class Program {
                             continue;
                         }
 
+                        var diffY = y2 - y;
+                        var diffX = x2 - x;
+
                         // Up
-                        var y3 = y - (y2 - y);
-                        var x3 = x - (x2 - x);
-                        if (y3 >= 0 && x3 >= 0 && y3 < input.Length && x3 < input[y3].Length) {
+                        var y3 = y;
+                        var x3 = x;
+                        while (y3 >= 0 && x3 >= 0 &&
+                               y3 < input.Length && x3 < input[y3].Length) {
                             antiNodes[y3][x3] = '#';
+                            y3 -= diffY;
+                            x3 -= diffX;
                         }
 
                         // Down
-                        y3 = y2 + (y2 - y);
-                        x3 = x2 + (x2 - x);
-                        if (y3 < 0 || x3 < 0 || y3 >= input.Length || x3 >= input[y3].Length) {
-                            continue;
+                        y3 = y2;
+                        x3 = x2;
+                        while (y3 >= 0 && x3 >= 0 &&
+                               y3 < input.Length && x3 < input[y3].Length) {
+                            antiNodes[y3][x3] = '#';
+                            y3 += diffY;
+                            x3 += diffX;
                         }
-
-                        antiNodes[y3][x3] = '#';
                     }
                 }
             }
         }
-
-        // foreach (var line in input) {
-        //     Console.WriteLine(line);
-        // }
-        //
-        // foreach (var line in antiNodes) {
-        //     Console.WriteLine(line);
-        // }
 
         Console.WriteLine(antiNodes.Sum(x => x.Sum(c => Convert.ToInt32(c == '#'))));
     }
