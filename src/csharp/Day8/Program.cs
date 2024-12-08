@@ -2,7 +2,7 @@
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllLines("Inputs.txt").Select(x => x.ToArray()).ToArray();
+        var input = File.ReadAllLines("Inputs.txt");
 
         var antiNodes = Enumerable.Range(0, input.Length).Select(x => input[x].ToArray()).ToArray();
         foreach (var line in antiNodes) {
@@ -11,7 +11,7 @@ internal static class Program {
 
         for (var y = 0; y < input.Length; y++) {
             for (var x = 0; x < input[y].Length; x++) {
-                if (input[y][x] is '.') {
+                if (input[y][x] == '.') {
                     continue;
                 }
 
