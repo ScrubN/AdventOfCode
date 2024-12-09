@@ -2,7 +2,7 @@
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllText("Inputs.txt").Select(x => int.Parse(x.ToString())).ToArray();
+        var input = File.ReadAllText("Inputs.txt").Select(ToInt).ToArray();
 
         var disk = new List<int>();
         for (var i = 0; i < input.Length; i++) {
@@ -15,7 +15,8 @@ internal static class Program {
             }
         }
 
-        for (var i = disk.Count - 1; i >= 0; i--) {
+        var firstEmpty = 0;
+        for (var i = disk.Count - 1; i >= firstEmpty; i--) {
             if (disk[i] == -1) {
                 continue;
             }
@@ -26,7 +27,8 @@ internal static class Program {
                 fileSize++;
             }
 
-            for (var j = 0; j < disk.Count; j++) {
+            firstEmpty = disk.IndexOf(-1);
+            for (var j = firstEmpty;; j++) {
                 if (j >= i) {
                     i -= fileSize - 1;
                     break;
@@ -57,6 +59,14 @@ internal static class Program {
         var checksum = ComputeChecksum(disk);
 
         Console.WriteLine(checksum);
+    }
+
+    private static int ToInt(char arg) {
+        if (arg is >= '0' and <= '9') {
+            return arg - '0';
+        }
+
+        throw new ArgumentException(null, nameof(arg));
     }
 
     private static long ComputeChecksum(IEnumerable<int> disk) {
