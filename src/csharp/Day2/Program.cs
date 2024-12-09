@@ -2,11 +2,31 @@
 
 internal static class Program {
     internal static void Main(string[] args) {
-        using var fs = File.OpenRead("Inputs.txt");
-        using var sr = new StreamReader(fs);
+        var input = File.ReadAllLines("Inputs.txt");
 
+        var safe1 = Part1(input);
+        var safe2 = Part2(input);
+
+        Console.WriteLine($"Part 1: {safe1}");
+        Console.WriteLine($"Part 2: {safe2}");
+    }
+
+    private static int Part1(string[] input) {
         var safe = 0;
-        while (sr.ReadLine() is { } line) {
+        foreach (var line in input) {
+            var numbers = line.Split(' ').Select(int.Parse).ToArray();
+
+            if (CheckSafety(numbers)) {
+                safe++;
+            }
+        }
+
+        return safe;
+    }
+
+    private static int Part2(string[] input) {
+        var safe = 0;
+        foreach (var line in input) {
             var numbers = line.Split(' ').Select(int.Parse).ToArray();
 
             if (CheckSafety(numbers)) {
@@ -24,7 +44,7 @@ internal static class Program {
             }
         }
 
-        Console.WriteLine(safe);
+        return safe;
     }
 
     private static bool CheckSafety(int[] numbers) {
@@ -37,10 +57,6 @@ internal static class Program {
                 return false;
             }
 
-            if (Math.Abs(a - b) > 3) {
-                return false;
-            }
-
             if (ascending) {
                 if (a > b) {
                     return false;
@@ -50,6 +66,10 @@ internal static class Program {
                 if (a < b) {
                     return false;
                 }
+            }
+
+            if (Math.Abs(a - b) > 3) {
+                return false;
             }
         }
 
