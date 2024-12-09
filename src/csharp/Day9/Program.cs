@@ -20,24 +20,37 @@ internal static class Program {
                 continue;
             }
 
+            var fileSize = 1;
+            while (i - fileSize >= 0
+                   && disk[i - fileSize] == disk[i]) {
+                fileSize++;
+            }
+
             for (var j = 0; j < disk.Count; j++) {
+                if (j >= i) {
+                    i -= fileSize - 1;
+                    break;
+                }
+
                 if (disk[j] != -1) {
                     continue;
                 }
 
-                disk[j] = disk[i];
-                disk[i] = -1;
-            }
-
-            var done = true;
-            foreach (var item in disk.SkipWhile(x => x != -1)) {
-                if (item != -1) {
-                    done = false;
+                var space = 1;
+                while (space < fileSize
+                       && j + space < i
+                       && disk[j + space] == -1) {
+                    space++;
                 }
-            }
 
-            if (done) {
-                break;
+                if (space < fileSize) {
+                    continue;
+                }
+
+                for (var h = 0; h < fileSize; h++) {
+                    disk[j + h] = disk[i - h];
+                    disk[i - h] = -1;
+                }
             }
         }
 
