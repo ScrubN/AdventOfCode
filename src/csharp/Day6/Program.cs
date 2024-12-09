@@ -6,43 +6,139 @@ internal static class Program {
     internal static void Main(string[] args) {
         var input = File.ReadAllLines("Inputs.txt").Select(x => x.ToArray()).ToArray();
 
-        Point start = default;
+        var start = FindStart(input);
+
+        var sum1 = Part1(input, start);
+        var sum2 = Part2(input, start);
+
+        Console.WriteLine($"Part 1: {sum1}");
+        Console.WriteLine($"Part 2: {sum2}");
+    }
+
+    private static Point FindStart(char[][] input) {
         for (var y = 0; y < input.Length; y++) {
             for (var x = 0; x < input[y].Length; x++) {
                 if (input[y][x] == '^') {
-                    start = new Point(x, y);
+                    return new Point(x, y);
                 }
             }
         }
 
+        throw new Exception("No starting position was found.");
+    }
+
+    private static int Part1(char[][] input, Point start) {
+        var positions = new HashSet<Point> { start };
+        var current = start;
+        while (true) {
+            if (MoveUp1(input, current, positions) is not { } up) {
+                break;
+            }
+
+            if (MoveRight1(input, up, positions) is not { } right) {
+                break;
+            }
+
+            if (MoveDown1(input, right, positions) is not { } down) {
+                break;
+            }
+
+            if (MoveLeft1(input, down, positions) is not { } left) {
+                break;
+            }
+
+            current = left;
+        }
+
+        return positions.Count;
+    }
+
+    private static Point? MoveUp1(char[][] input, Point current, HashSet<Point> positions) {
+        var last = current;
+        for (var i = current.Y - 1; i >= 0; i--) {
+            if (input[i][current.X] == '#') {
+                return last;
+            }
+
+            last.Y = i;
+            positions.Add(last);
+        }
+
+        return null;
+    }
+
+    private static Point? MoveDown1(char[][] input, Point current, HashSet<Point> positions) {
+        var last = current;
+        for (var i = current.Y + 1; i < input.Length; i++) {
+            if (input[i][current.X] == '#') {
+                return last;
+            }
+
+            last.Y = i;
+            positions.Add(last);
+        }
+
+        return null;
+    }
+
+    private static Point? MoveLeft1(char[][] input, Point current, HashSet<Point> positions) {
+        var last = current;
+        for (var i = current.X - 1; i >= 0; i--) {
+            if (input[current.Y][i] == '#') {
+                return last;
+            }
+
+            last.X = i;
+            positions.Add(last);
+        }
+
+        return null;
+    }
+
+    private static Point? MoveRight1(char[][] input, Point current, HashSet<Point> positions) {
+        var last = current;
+        for (var i = current.X + 1; i < input[current.Y].Length; i++) {
+            if (input[current.Y][i] == '#') {
+                return last;
+            }
+
+            last.X = i;
+            positions.Add(last);
+        }
+
+        return null;
+    }
+
+    private static int Part2(char[][] input, Point start) {
         var sum = 0;
         for (var y = 0; y < input.Length; y++) {
             for (var x = 0; x < input[y].Length; x++) {
-                if (input[y][x] == '.') {
-                    var old = input[y];
-                    var arr = old.ToArray();
-                    arr[x] = '#';
-                    input[y] = arr;
-                    if (RunLoop(start, input)) {
-                        sum++;
-                    }
-
-                    input[y] = old;
+                if (input[y][x] != '.') {
+                    continue;
                 }
+
+                var old = input[y][x];
+                input[y][x] = '#';
+
+                if (Part2Loop(start, input)) {
+                    sum++;
+                }
+
+                input[y][x] = old;
             }
         }
 
-        Console.WriteLine(sum);
+        return sum;
     }
 
-    private static bool RunLoop(Point start, char[][] input) {
+    private static bool Part2Loop(Point start, char[][] input) {
         var uPos = new HashSet<Point>();
         var rPos = new HashSet<Point>();
         var dPos = new HashSet<Point>();
         var lPos = new HashSet<Point>();
         var current = start;
         while (true) {
-            if (MoveUp(input, current) is not { } up) {
+            if (MoveUp2(input, current) is not { } up) {
                 break;
             }
 
@@ -50,7 +146,7 @@ internal static class Program {
                 return true;
             }
 
-            if (MoveRight(input, up) is not { } right) {
+            if (MoveRight2(input, up) is not { } right) {
                 break;
             }
 
@@ -58,7 +154,7 @@ internal static class Program {
                 return true;
             }
 
-            if (MoveDown(input, right) is not { } down) {
+            if (MoveDown2(input, right) is not { } down) {
                 break;
             }
 
@@ -66,7 +162,7 @@ internal static class Program {
                 return true;
             }
 
-            if (MoveLeft(input, down) is not { } left) {
+            if (MoveLeft2(input, down) is not { } left) {
                 break;
             }
 
@@ -80,52 +176,41 @@ internal static class Program {
         return false;
     }
 
-    private static Point? MoveUp(char[][] input, Point current) {
-        var last = current;
+    private static Point? MoveUp2(char[][] input, Point current) {
         for (var i = current.Y - 1; i >= 0; i--) {
             if (input[i][current.X] == '#') {
-                return last;
+                return current with { Y = i + 1 };
             }
-
-            last = current with { Y = i };
         }
 
         return null;
     }
 
-    private static Point? MoveDown(char[][] input, Point current) {
-        var last = current;
+    private static Point? MoveDown2(char[][] input, Point current) {
         for (var i = current.Y + 1; i < input.Length; i++) {
             if (input[i][current.X] == '#') {
-                return last;
+                return current with { Y = i - 1 };
             }
-
-            last = current with { Y = i };
         }
 
         return null;
     }
 
-    private static Point? MoveRight(char[][] input, Point current) {
-        var last = current;
-        for (var i = current.X + 1; i < input[current.Y].Length; i++) {
-            if (input[current.Y][i] == '#') {
-                return last;
-            }
-
-            last = current with { X = i };
-        }
-
-        return null;
-    }
-    private static Point? MoveLeft(char[][] input, Point current) {
-        var last = current;
+    private static Point? MoveLeft2(char[][] input, Point current) {
         for (var i = current.X - 1; i >= 0; i--) {
             if (input[current.Y][i] == '#') {
-                return last;
+                return current with { X = i + 1 };
             }
+        }
 
-            last = current with { X = i };
+        return null;
+    }
+
+    private static Point? MoveRight2(char[][] input, Point current) {
+        for (var i = current.X + 1; i < input[current.Y].Length; i++) {
+            if (input[current.Y][i] == '#') {
+                return current with { X = i - 1 };
+            }
         }
 
         return null;
