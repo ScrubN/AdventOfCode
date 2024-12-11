@@ -36,36 +36,29 @@ internal static class Program {
         return sum;
     }
 
-    private static int ExploreNext1(int i, int[][] input, int x, int y, HashSet<Point>? taken = null) {
+    private static int ExploreNext1(int num, int[][] input, int x, int y, HashSet<Point>? taken = null) {
         taken ??= [];
 
-        if (i == 9) {
+        if (num == 9) {
             return Convert.ToInt32(taken.Add(new Point(x, y)));
         }
 
+        var nextNum = num + 1;
         var total = 0;
-        if (y - 1 >= 0) {
-            if (input[y - 1][x] == i + 1) {
-                total += ExploreNext1(i + 1, input, x, y - 1, taken);
-            }
+        if (y - 1 >= 0 && input[y - 1][x] == nextNum) {
+            total += ExploreNext1(nextNum, input, x, y - 1, taken);
         }
 
-        if (y + 1 < input.Length) {
-            if (input[y + 1][x] == i + 1) {
-                total += ExploreNext1(i + 1, input, x, y + 1, taken);
-            }
+        if (y + 1 < input.Length && input[y + 1][x] == nextNum) {
+            total += ExploreNext1(nextNum, input, x, y + 1, taken);
         }
 
-        if (x - 1 >= 0) {
-            if (input[y][x - 1] == i + 1) {
-                total += ExploreNext1(i + 1, input, x - 1, y, taken);
-            }
+        if (x - 1 >= 0 && input[y][x - 1] == nextNum) {
+            total += ExploreNext1(nextNum, input, x - 1, y, taken);
         }
 
-        if (x + 1 < input[y].Length) {
-            if (input[y][x + 1] == i + 1) {
-                total += ExploreNext1(i + 1, input, x + 1, y, taken);
-            }
+        if (x + 1 < input[y].Length && input[y][x + 1] == nextNum) {
+            total += ExploreNext1(nextNum, input, x + 1, y, taken);
         }
 
         return total;
@@ -86,34 +79,27 @@ internal static class Program {
         return sum;
     }
 
-    private static int ExploreNext2(int i, int[][] input, int x, int y) {
-        if (i == 9) {
+    private static int ExploreNext2(int num, int[][] input, int x, int y) {
+        if (num == 9) {
             return 1;
         }
 
+        var nextNum = num + 1;
         var total = 0;
-        if (y - 1 >= 0) {
-            if (input[y - 1][x] == i + 1) {
-                total += ExploreNext2(i + 1, input, x, y - 1);
-            }
+        if (y - 1 >= 0 && input[y - 1][x] == nextNum) {
+            total += ExploreNext2(nextNum, input, x, y - 1);
         }
 
-        if (y + 1 < input.Length) {
-            if (input[y + 1][x] == i + 1) {
-                total += ExploreNext2(i + 1, input, x, y + 1);
-            }
+        if (y + 1 < input.Length && input[y + 1][x] == nextNum) {
+            total += ExploreNext2(nextNum, input, x, y + 1);
         }
 
-        if (x - 1 >= 0) {
-            if (input[y][x - 1] == i + 1) {
-                total += ExploreNext2(i + 1, input, x - 1, y);
-            }
+        if (x - 1 >= 0 && input[y][x - 1] == nextNum) {
+            total += ExploreNext2(nextNum, input, x - 1, y);
         }
 
-        if (x + 1 < input[y].Length) {
-            if (input[y][x + 1] == i + 1) {
-                total += ExploreNext2(i + 1, input, x + 1, y);
-            }
+        if (x + 1 < input[y].Length && input[y][x + 1] == nextNum) {
+            total += ExploreNext2(nextNum, input, x + 1, y);
         }
 
         return total;
