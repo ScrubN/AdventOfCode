@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 
 namespace Day12;
 
@@ -18,16 +19,16 @@ internal static class Program {
             .SelectMany((s, y) => s.Select((_, x) => (Point?)new Point(x, y)))
             .ToHashSet();
 
-        Dictionary<Point, int> costs = [];
+        List<int> costs = [];
         while (points.FirstOrDefault() is { } start) {
             var discovered = FloodFill(input, points, start);
 
             var area = discovered.Count;
             var perimeter = ComputePerimeter(discovered);
-            costs[start] = area * perimeter;
+            costs.Add(area * perimeter);
         }
 
-        return costs.Sum(x => x.Value);
+        return costs.Sum();
     }
 
     private static HashSet<Point> FloodFill(string[] input, HashSet<Point?> points, Point start) {
@@ -35,24 +36,22 @@ internal static class Program {
         HashSet<Point> discovered = [];
         HashSet<Point?> queue = [start];
 
-        while (queue.FirstOrDefault() is { } pointToCheck) {
-            queue.Remove(pointToCheck);
+        while (queue.FirstOrDefault() is { } point) {
+            queue.Remove(point);
 
-            if (input[pointToCheck.Y][pointToCheck.X] != type) {
-                continue;
-            }
+            Debug.Assert(input[point.Y][point.X] == type);
 
-            discovered.Add(pointToCheck);
-            points.Remove(pointToCheck);
+            discovered.Add(point);
+            points.Remove(point);
 
             for (var y = -1; y <= 1; y++) {
-                var y2 = pointToCheck.Y + y;
+                var y2 = point.Y + y;
                 if (y2 < 0 || y2 >= input.Length) {
                     continue;
                 }
 
                 for (var x = -1; x <= 1; x++) {
-                    var x2 = pointToCheck.X + x;
+                    var x2 = point.X + x;
                     if (x2 < 0 || x2 >= input[y2].Length) {
                         continue;
                     }
@@ -104,16 +103,16 @@ internal static class Program {
             .SelectMany((s, y) => s.Select((_, x) => (Point?)new Point(x, y)))
             .ToHashSet();
 
-        Dictionary<Point, int> costs = [];
+        List<int> costs = [];
         while (points.FirstOrDefault() is { } start) {
             var discovered = FloodFill(input, points, start);
 
             var area = discovered.Count;
             var sides = ComputeSides(discovered);
-            costs[start] = area * sides;
+            costs.Add(area * sides);
         }
 
-        return costs.Sum(x => x.Value);
+        return costs.Sum();
     }
 
     private enum Direction {
@@ -147,7 +146,8 @@ internal static class Program {
             }
         }
 
-        foreach (var side in sides.OrderBy(x => x.point.X).ThenBy(x => x.point.Y).ToArray()) {
+        var orderedSides = sides.OrderBy(x => x.point.X).ThenBy(x => x.point.Y).ToArray();
+        foreach (var side in orderedSides) {
             var newSide = side with { point = side.point with { X = side.point.X + 1 } };
             if (sides.Contains(newSide)) {
                 sides.Remove(side);
