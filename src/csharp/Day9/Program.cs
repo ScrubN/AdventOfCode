@@ -99,18 +99,14 @@ internal static class Program {
                 }
 
                 // Move file
-                var copied = false;
                 for (var h = 0; h < fileSize; h++) {
                     disk[j + h] = disk[i - h];
                     disk[i - h] = -1;
-                    copied = true;
                 }
 
-                if (copied) {
-                    i -= fileSize - 1;
-                    firstEmpty = disk.IndexOf(-1);
-                    break;
-                }
+                i -= fileSize - 1;
+                firstEmpty = disk.IndexOf(-1);
+                break;
             }
         }
     }
