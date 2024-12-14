@@ -10,12 +10,19 @@ internal static partial class Program {
     [GeneratedRegex(@"^Prize: X=(\d+), Y=(\d+)$")]
     private static partial Regex PrizeRegex { get; }
 
+    private record struct LongPoint(Int128 X, Int128 Y) {
+        public static implicit operator LongPoint(Point p) => new(p.X, p.Y);
+        public static LongPoint operator +(LongPoint a, ulong b) => new(a.X + b, a.Y + b);
+    }
+
     internal static void Main(string[] args) {
         var machines = GetMachines();
 
         var res1 = Part1(machines);
+        var res2 = Part2(machines);
 
         Console.WriteLine(res1);
+        Console.WriteLine(res2);
     }
 
     private static List<(Point A, Point B, Point Prize)> GetMachines() {
@@ -108,8 +115,7 @@ internal static partial class Program {
         // | aY pY |
         var sB = ((aX * pY) - (aY * pX)) / (double)det;
 
-        if (sA is < 0 or > 100 || !IsWholeNumber(sA)
-            || sB is < 0 or > 100 || !IsWholeNumber(sB)) {
+        if (sA is < 0 or > 100 || !IsWholeNumber(sA) || sB is < 0 or > 100 || !IsWholeNumber(sB)) {
             tokens = 0;
             return false;
         }
@@ -118,7 +124,56 @@ internal static partial class Program {
         return true;
     }
 
+    private static ulong Part2(IEnumerable<(Point A, Point B, Point Prize)> input) {
+        var res = 0UL;
+
+        foreach (var machine in input.Select(x => (x.A, x.B, (LongPoint)x.Prize + 10000000000000))) {
+            if (SolveMachine2(machine, out var tokens)) {
+                res += tokens;
+            }
+        }
+
+        return res;
+    }
+
+    private static bool SolveMachine2((LongPoint A, LongPoint B, LongPoint Prize) machine, out ulong tokens) {
+        var aX = machine.A.X;
+        var aY = machine.A.Y;
+
+        var bX = machine.B.X;
+        var bY = machine.B.Y;
+
+        var pX = machine.Prize.X;
+        var pY = machine.Prize.Y;
+
+        // | aX bX |
+        // | aY bY |
+        var det = (aX * bY) - (aY * bX);
+        if (det == 0) {
+            tokens = 0;
+            return false;
+        }
+
+        // | pX bX |
+        // | pY bY |
+        var sA = (double)((pX * bY) - (pY * bX)) / (double)det;
+
+        // | aX pX |
+        // | aY pY |
+        var sB = (double)((aX * pY) - (aY * pX)) / (double)det;
+
+        if (!IsWholeNumber(sA) || !IsWholeNumber(sB)) {
+            tokens = 0;
+            return false;
+        }
+
+        tokens = RoundToULong(sA) * 3 + RoundToULong(sB);
+        return true;
+    }
+
     private static bool IsWholeNumber(double value) => Math.Abs(value - Math.Round(value)) < 0.0001;
 
     private static int RoundToInt(double value) => (int)Math.Round(value);
+
+    private static ulong RoundToULong(double value) => (ulong)Math.Round(value);
 }
