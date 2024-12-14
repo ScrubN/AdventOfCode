@@ -10,9 +10,10 @@ internal static partial class Program {
     [GeneratedRegex(@"^Prize: X=(\d+), Y=(\d+)$")]
     private static partial Regex PrizeRegex { get; }
 
-    private record struct LongPoint(Int128 X, Int128 Y) {
+    private record struct LongPoint(long X, long Y) {
         public static implicit operator LongPoint(Point p) => new(p.X, p.Y);
-        public static LongPoint operator +(LongPoint a, ulong b) => new(a.X + b, a.Y + b);
+
+        public static LongPoint operator +(LongPoint a, long b) => new(a.X + b, a.Y + b);
     }
 
     internal static void Main(string[] args) {
@@ -156,11 +157,11 @@ internal static partial class Program {
 
         // | pX bX |
         // | pY bY |
-        var sA = (double)((pX * bY) - (pY * bX)) / (double)det;
+        var sA = ((pX * bY) - (pY * bX)) / (double)det;
 
         // | aX pX |
         // | aY pY |
-        var sB = (double)((aX * pY) - (aY * pX)) / (double)det;
+        var sB = ((aX * pY) - (aY * pX)) / (double)det;
 
         if (!IsWholeNumber(sA) || !IsWholeNumber(sB)) {
             tokens = 0;
