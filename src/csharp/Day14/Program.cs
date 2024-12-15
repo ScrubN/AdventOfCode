@@ -10,12 +10,17 @@ internal static partial class Program {
     [GeneratedRegex(@"^p=(\d+),(\d+) v=(-?\d+),(-?\d+)$")]
     private static partial Regex RobotRegex { get; }
 
+    private const int GRID_WIDTH = 101;
+    private const int GRID_HEIGHT = 103;
+
     internal static void Main(string[] args) {
         var robots = GetRobots();
 
         var safety = Part1(robots);
+        var secondsElapsed = Part2(robots);
 
-        Console.WriteLine(safety);
+        Console.WriteLine($"Part 1: {safety}");
+        Console.WriteLine($"Part 2: {secondsElapsed}");
     }
 
     private static List<Robot> GetRobots() {
@@ -37,8 +42,6 @@ internal static partial class Program {
     }
 
     private static long Part1(List<Robot> robots) {
-        const int GRID_WIDTH = 101;
-        const int GRID_HEIGHT = 103;
         var grid = SetupGrid(robots);
 
         for (var i = 0; i < 100; i++) {
@@ -56,6 +59,22 @@ internal static partial class Program {
         var safetyD = ComputeSafety((int)Math.Ceiling(GRID_WIDTH / 2d), GRID_WIDTH, (int)Math.Ceiling(GRID_HEIGHT / 2d), GRID_HEIGHT, grid);
 
         return safetyA * safetyB * safetyC * safetyD;
+    }
+
+    private static long Part2(List<Robot> robots) {
+        var grid = SetupGrid(robots);
+
+        // This should not work but it does lmao
+        var secondsElapsed = 0L;
+        while (true) {
+            grid = MoveRobots(grid, GRID_WIDTH, GRID_HEIGHT);
+
+            secondsElapsed++;
+
+            if (grid.All(x => x.Value.Count == 1)) {
+                return secondsElapsed;
+            }
+        }
     }
 
     private static Dictionary<Point, List<Point>> SetupGrid(List<Robot> robots) {
