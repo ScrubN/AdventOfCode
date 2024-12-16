@@ -28,6 +28,11 @@ internal static class Program {
     }
 
     private static int Part1(char[][] input, Point start) {
+        var positions = Part1Loop(input, start);
+        return positions.Count;
+    }
+
+    private static HashSet<Point> Part1Loop(char[][] input, Point start) {
         var positions = new HashSet<Point> { start };
         var current = start;
         while (true) {
@@ -50,7 +55,7 @@ internal static class Program {
             current = left;
         }
 
-        return positions.Count;
+        return positions;
     }
 
     private static Point? MoveUp1(char[][] input, Point current, HashSet<Point> positions) {
@@ -110,22 +115,24 @@ internal static class Program {
     }
 
     private static int Part2(char[][] input, Point start) {
+        var positions = Part1Loop(input, start);
+
         var sum = 0;
-        for (var y = 0; y < input.Length; y++) {
-            for (var x = 0; x < input[y].Length; x++) {
-                if (input[y][x] != '.') {
-                    continue;
-                }
+        foreach (var position in positions) {
+            var x = position.X;
+            var y = position.Y;
 
-                var old = input[y][x];
-                input[y][x] = '#';
-
-                if (Part2Loop(start, input)) {
-                    sum++;
-                }
-
-                input[y][x] = old;
+            if (input[y][x] != '.') {
+                continue;
             }
+
+            input[y][x] = '#';
+
+            if (Part2Loop(start, input)) {
+                sum++;
+            }
+
+            input[y][x] = '.';
         }
 
         return sum;
