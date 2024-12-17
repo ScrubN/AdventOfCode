@@ -3,12 +3,38 @@
 namespace Day17;
 
 internal static partial class Program {
+    /// <summary> The adv instruction (opcode 0) performs division. The numerator is the value in the A register. The denominator is found by raising 2 to the power of the instruction's combo operand. (So, an operand of 2 would divide A by 4 (2^2); an operand of 5 would divide A by 2^B.) The result of the division operation is truncated to an integer and then written to the A register.</summary>
+    private const int ADIV = 0;
+
+    /// <summary> The bxl instruction (opcode 1) calculates the bitwise XOR of register B and the instruction's literal operand, then stores the result in register B.</summary>
+    private const int BXL = 1;
+
+    /// <summary> The bst instruction (opcode 2) calculates the value of its combo operand modulo 8 (thereby keeping only its lowest 3 bits), then writes that value to the B register.</summary>
+    private const int BST = 2;
+
+    /// <summary> The jnz instruction (opcode 3) does nothing if the A register is 0. However, if the A register is not zero, it jumps by setting the instruction pointer to the value of its literal operand; if this instruction jumps, the instruction pointer is not increased by 2 after this instruction.</summary>
+    private const int JNZ = 3;
+
+    /// <summary> The bxc instruction (opcode 4) calculates the bitwise XOR of register B and register C, then stores the result in register B. (For legacy reasons, this instruction reads an operand but ignores it.)</summary>
+    private const int BXC = 4;
+
+    /// <summary> The out instruction (opcode 5) calculates the value of its combo operand modulo 8, then outputs that value. (If a program outputs multiple values, they are separated by commas.)</summary>
+    private const int OUT = 5;
+
+    /// <summary> The bdv instruction (opcode 6) works exactly like the adv instruction except that the result is stored in the B register. (The numerator is still read from the A register.)</summary>
+    private const int BDV = 6;
+
+    /// <summary> The cdv instruction (opcode 7) works exactly like the adv instruction except that the result is stored in the C register. (The numerator is still read from the A register.)</summary>
+    private const int CDV = 7;
+
     private record Computer(int A, int B, int C, int Ip) {
         public int A { get; set; } = A;
         public int B { get; set; } = B;
         public int C { get; set; } = C;
         public int Ip { get; set; } = Ip;
         public List<int> StdOut { get; } = [];
+
+        public Computer DeepClone() => new(A, B, C, Ip);
     }
 
     [GeneratedRegex(@"^Register (\w): (\d+)")]
@@ -66,9 +92,11 @@ internal static partial class Program {
     }
 
     private static string Part1(Computer computer, int[] program) {
-        FdeLoop(computer, program);
+        var com = computer.DeepClone();
 
-        return string.Join(',', computer.StdOut.Select(x => x.ToString()));
+        FdeLoop(com, program);
+
+        return string.Join(',', com.StdOut.Select(x => x.ToString()));
     }
 
     private static void FdeLoop(Computer computer, int[] program) {
@@ -85,31 +113,32 @@ internal static partial class Program {
 
     private static void ExecuteInstruction(Computer computer, int opcode, int operand) {
         switch (opcode) {
-            case 0: // adiv
+            case ADIV:
                 computer.A = DivIns(computer.A, GetComboOperand(computer, operand));
                 break;
-            case 1: // bxl
+            case BXL:
                 computer.B = computer.B ^ operand;
                 break;
-            case 2: // bst
+            case BST:
                 computer.B = GetComboOperand(computer, operand) % 8;
                 break;
-            case 3: // jnz
+            case JNZ:
                 if (computer.A != 0) {
                     computer.Ip = operand;
                     return;
                 }
+
                 break;
-            case 4: // bxc
+            case BXC:
                 computer.B = computer.B ^ computer.C;
                 break;
-            case 5: // out
                 computer.StdOut.Add(GetComboOperand(computer, operand) % 8);
+            case OUT:
                 break;
-            case 6: // bdv
+            case BDV:
                 computer.B = DivIns(computer.A, GetComboOperand(computer, operand));
                 break;
-            case 7: // cdv
+            case CDV:
                 computer.C = DivIns(computer.A, GetComboOperand(computer, operand));
                 break;
             default:
