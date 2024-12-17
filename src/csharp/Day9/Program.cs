@@ -41,21 +41,20 @@ internal static class Program {
     }
 
     private static void Part1(List<int> disk) {
-        var firstEmpty = 0;
-        for (var i = disk.Count - 1; i >= firstEmpty; i--) {
-            if (disk[i] == -1) {
+        var first = 0;
+        for (var last = disk.Count - 1; last > first; last--) {
+            var id = disk[last];
+            if (id == -1) {
                 continue;
             }
 
-            for (var j = firstEmpty; j < i; j++) {
-                if (disk[j] != -1) {
+            for (; first < last; first++) {
+                if (disk[first] != -1) {
                     continue;
                 }
 
-                disk[j] = disk[i];
-                disk[i] = -1;
-
-                firstEmpty = j;
+                disk[first] = id;
+                disk[last] = -1;
                 break;
             }
         }
@@ -63,51 +62,49 @@ internal static class Program {
 
     private static void Part2(List<int> disk) {
         var firstEmpty = 0;
-        for (var i = disk.Count - 1; i >= firstEmpty; i--) {
-            if (disk[i] == -1) {
+        for (var last = disk.Count - 1; last > firstEmpty; last--) {
+            var id = disk[last];
+            if (id == -1) {
                 continue;
             }
 
             // Compute file size
             var fileSize = 1;
-            while (i - fileSize >= 0
-                   && disk[i - fileSize] == disk[i]) {
+            while (last - fileSize >= 0
+                   && disk[last - fileSize] == id) {
                 fileSize++;
             }
 
             // Search for chunk to move to
-            for (var j = firstEmpty;; j++) {
-                if (j >= i) {
-                    i -= fileSize - 1;
-                    break;
-                }
-
-                if (disk[j] != -1) {
+            for (var first = firstEmpty; first < last; first++) {
+                if (disk[first] != -1) {
                     continue;
                 }
 
                 // Compute chunk size
                 var space = 1;
                 while (space < fileSize
-                       && j + space < i
-                       && disk[j + space] == -1) {
+                       && first + space < last
+                       && disk[first + space] == -1) {
                     space++;
                 }
 
                 if (space < fileSize) {
+                    first += space - 1;
                     continue;
                 }
 
                 // Move file
-                for (var h = 0; h < fileSize; h++) {
-                    disk[j + h] = disk[i - h];
-                    disk[i - h] = -1;
+                for (var i = 0; i < fileSize; i++) {
+                    disk[first + i] = disk[last - i];
+                    disk[last - i] = -1;
                 }
 
-                i -= fileSize - 1;
-                firstEmpty = disk.IndexOf(-1);
+                firstEmpty = disk.IndexOf(-1, firstEmpty);
                 break;
             }
+
+            last -= fileSize - 1;
         }
     }
 
@@ -119,8 +116,7 @@ internal static class Program {
                 continue;
             }
 
-            var val = item * i;
-            checksum += val;
+            checksum += item * i;
         }
 
         return checksum;
