@@ -13,8 +13,10 @@ internal static class Program {
             .ToArray();
 
         var steps = Part1(input);
+        var point = Part2(input);
 
-        Console.WriteLine(steps);
+        Console.WriteLine($"Part 1: {steps}");
+        Console.WriteLine($"Part 2: {point}");
     }
 
     private static int Part1(Point[] input) {
@@ -30,6 +32,27 @@ internal static class Program {
         }
 
         return Bfs(grid);
+    }
+
+    private static Point Part2(Point[] input) {
+        var grid = Enumerable.Repeat(false, GRID_SIZE).Select(_ => Enumerable.Repeat(false, GRID_SIZE).ToArray()).ToArray();
+
+        var i = 0;
+        for (; i < 1024; i++) {
+            var point = input[i];
+            grid[point.Y][point.X] = true;
+        }
+
+        while (true) {
+            var bfsRes = Bfs(grid);
+            if (bfsRes == -1) {
+                return input[i];
+            }
+
+            i++;
+            var point = input[i];
+            grid[point.Y][point.X] = true;
+        }
     }
 
     private static int Bfs(bool[][] grid) {
