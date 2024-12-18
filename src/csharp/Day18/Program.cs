@@ -21,7 +21,10 @@ internal static class Program {
     }
 
     private static int Part1(Point[] input) {
-        var grid = Enumerable.Repeat(false, GRID_SIZE).Select(_ => Enumerable.Repeat(false, GRID_SIZE).ToArray()).ToArray();
+        var grid = new bool[GRID_SIZE][];
+        for (var i = 0; i < grid.Length; i++) {
+            grid[i] = new bool[GRID_SIZE];
+        }
 
         for (var i = 0; i < 1024; i++) {
             var point = input[i];
@@ -36,7 +39,10 @@ internal static class Program {
     }
 
     private static Point Part2(Point[] input) {
-        var grid = Enumerable.Repeat(false, GRID_SIZE).Select(_ => Enumerable.Repeat(false, GRID_SIZE).ToArray()).ToArray();
+        var grid = new bool[GRID_SIZE][];
+        for (var y = 0; y < grid.Length; y++) {
+            grid[y] = new bool[GRID_SIZE];
+        }
 
         var i = 0;
         for (; i < 1024; i++) {
