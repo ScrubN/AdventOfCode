@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 
 namespace Day18;
 
@@ -16,7 +17,7 @@ internal static class Program {
         var point = Part2(input);
 
         Console.WriteLine($"Part 1: {steps}");
-        Console.WriteLine($"Part 2: {point}");
+        Console.WriteLine($"Part 2: {point.X},{point.Y}");
     }
 
     private static int Part1(Point[] input) {
@@ -31,7 +32,7 @@ internal static class Program {
             grid[point.Y][point.X] = true;
         }
 
-        return Bfs(grid);
+        return Bfs(grid)?.Count ?? -1;
     }
 
     private static Point Part2(Point[] input) {
@@ -43,19 +44,25 @@ internal static class Program {
             grid[point.Y][point.X] = true;
         }
 
+        HashSet<Point>? path = null;
         while (true) {
-            var bfsRes = Bfs(grid);
-            if (bfsRes == -1) {
+            path ??= Bfs(grid);
+            if (path == null) {
                 return input[i];
             }
 
             i++;
             var point = input[i];
             grid[point.Y][point.X] = true;
+
+            // Only recompute BFS if the newly added point is on the solution path
+            if (path.Contains(point)) {
+                path = null;
+            }
         }
     }
 
-    private static int Bfs(bool[][] grid) {
+    private static HashSet<Point>? Bfs(bool[][] grid) {
         var discovered = new HashSet<Point>();
         var queue = new Queue<BfsNode>();
         queue.Enqueue(new BfsNode(null, new Point(0, 0)));
@@ -94,17 +101,16 @@ internal static class Program {
             }
         }
 
-        return -1;
+        return null;
     }
 
-    private static int RetracePath(BfsNode node) {
-        var count = 0;
-
+    private static HashSet<Point> RetracePath(BfsNode node) {
+        var path = new HashSet<Point>();
         while (node.Parent != null) {
-            count++;
+            path.Add(node.Pos);
             node = node.Parent;
         }
 
-        return count;
+        return path;
     }
 }
