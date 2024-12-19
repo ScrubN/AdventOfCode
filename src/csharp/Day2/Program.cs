@@ -1,21 +1,24 @@
-﻿namespace Day2;
+﻿using System.Diagnostics;
+
+namespace Day2;
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllLines("Inputs.txt");
+        var input = File.ReadLines("Inputs.txt")
+            .Select(x => x.Split().Select(int.Parse).ToArray())
+            .ToArray();
 
-        var safe1 = Part1(input);
-        var safe2 = Part2(input);
+        // var safe1 = Part1(input);
+        // var safe2 = Part2(input);
+        var (safe1, safe2) = Part1And2(input);
 
         Console.WriteLine($"Part 1: {safe1}");
         Console.WriteLine($"Part 2: {safe2}");
     }
 
-    private static int Part1(string[] input) {
+    private static int Part1(int[][] input) {
         var safe = 0;
-        foreach (var line in input) {
-            var numbers = line.Split(' ').Select(int.Parse).ToArray();
-
+        foreach (var numbers in input) {
             if (CheckSafety(numbers)) {
                 safe++;
             }
@@ -24,20 +27,21 @@ internal static class Program {
         return safe;
     }
 
-    private static int Part2(string[] input) {
+    private static int Part2(int[][] input) {
         var safe = 0;
-        foreach (var line in input) {
-            var numbers = line.Split(' ').Select(int.Parse).ToArray();
-
+        foreach (var numbers in input) {
             if (CheckSafety(numbers)) {
                 safe++;
                 continue;
             }
 
+            var span = new int[numbers.Length - 1].AsSpan();
+            var numberSpan = numbers.AsSpan();
             for (var i = 0; i < numbers.Length; i++) {
-                var numbersList = numbers.ToList();
-                numbersList.RemoveAt(i);
-                if (CheckSafety(numbersList.ToArray())) {
+                numberSpan[..i].CopyTo(span);
+                numberSpan[(i + 1)..].CopyTo(span[i..]);
+
+                if (CheckSafety(span)) {
                     safe++;
                     break;
                 }
@@ -47,7 +51,37 @@ internal static class Program {
         return safe;
     }
 
-    private static bool CheckSafety(int[] numbers) {
+    private static (int safe1, int safw2) Part1And2(int[][] input) {
+        Span<int> stackSpace = stackalloc int[16];
+
+        var safe1 = 0;
+        var safe2 = 0;
+        foreach (var numbers in input) {
+            if (CheckSafety(numbers)) {
+                safe1++;
+                safe2++;
+                continue;
+            }
+
+            Debug.Assert(numbers.Length - 1 <= stackSpace.Length);
+
+            var span = stackSpace[..(numbers.Length - 1)];
+            var numberSpan = numbers.AsSpan();
+            for (var i = 0; i < numbers.Length; i++) {
+                numberSpan[..i].CopyTo(span);
+                numberSpan[(i + 1)..].CopyTo(span[i..]);
+
+                if (CheckSafety(span)) {
+                    safe2++;
+                    break;
+                }
+            }
+        }
+
+        return (safe1, safe2);
+    }
+
+    private static bool CheckSafety(ReadOnlySpan<int> numbers) {
         var ascending = numbers[0] < numbers[1];
         for (var i = 0; i < numbers.Length - 1; i++) {
             var a = numbers[i];

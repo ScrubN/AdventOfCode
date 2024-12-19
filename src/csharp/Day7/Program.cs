@@ -1,27 +1,47 @@
-﻿namespace Day7;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+namespace Day7;
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllLines("Inputs.txt");
+        var input = File.ReadLines("Inputs.txt")
+            .Select(ParseLine)
+            .ToArray();
 
-        var sum1 = 0L;
-        foreach (var line in input) {
-            sum1 += Part1(line);
+        var sum1 = 0UL;
+        foreach (var (expected, parameters) in input) {
+            sum1 += Part1(expected, CollectionsMarshal.AsSpan(parameters));
         }
 
-        var sum2 = 0L;
-        foreach (var line in input) {
-            sum2 += Part2(line);
+        var sum2 = 0UL;
+        foreach (var (expected, parameters) in input) {
+            sum2 += Part2(expected, CollectionsMarshal.AsSpan(parameters));
         }
 
         Console.WriteLine($"Part 1: {sum1}");
         Console.WriteLine($"Part 2: {sum2}");
     }
 
-    private static long Part1(string line) {
-        var (expected, parameters) = ParseLine(line);
+    private static (ulong expected, List<ulong> parameters) ParseLine(string line) {
+        var colonIndex = line.IndexOf(": ", StringComparison.Ordinal);
+        Debug.Assert(colonIndex != -1);
 
-        var maskMax = Math.Pow(2, parameters.Length); // Removing from the loop prevents it from being recomputed every iteration
+        var expected = ulong.Parse(line.AsSpan(0, colonIndex));
+
+        List<ulong> parameters = [];
+        var span = line.AsSpan(colonIndex + 2);
+        foreach (var range in span.Split(' ')) {
+            var span2 = span[range];
+            Debug.Assert(!span2.IsEmpty);
+            parameters.Add(ulong.Parse(span2));
+        }
+
+        return (expected, parameters);
+    }
+
+    private static ulong Part1(ulong expected, ReadOnlySpan<ulong> parameters) {
+        var maskMax = Math.ScaleB(1, parameters.Length);
         for (var mask = 0L; mask < maskMax; mask++) {
             var runningTotal = parameters[0];
 
@@ -52,10 +72,8 @@ internal static class Program {
         return 0;
     }
 
-    private static long Part2(string line) {
-        var (expected, parameters) = ParseLine(line);
-
-        var maskMax = Math.Pow(3, parameters.Length); // Removing from the loop prevents it from being recomputed every iteration
+    private static ulong Part2(ulong expected, ReadOnlySpan<ulong> parameters) {
+        var maskMax = Math.Pow(3, parameters.Length);
         for (var mask = 0L; mask < maskMax; mask++) {
             var runningTotal = parameters[0];
 
@@ -72,7 +90,7 @@ internal static class Program {
                         break;
                     case 2:
                         // For loop is faster than Math.Pow
-                        var digits = CountDigits(param); // Removing from the loop prevents it from being recomputed every iteration
+                        var digits = CountDigits(param);
                         for (var j = 0; j < digits; j++) {
                             runningTotal *= 10;
                         }
@@ -98,18 +116,10 @@ internal static class Program {
         return 0;
     }
 
-    private static (long, long[]) ParseLine(string line) {
-        var colonIndex = line.IndexOf(':');
-        var expected = long.Parse(line.AsSpan(0, colonIndex));
-        var parameters = line[(colonIndex + 1)..]
-            .Split(' ', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
-            .Select(long.Parse)
-            .ToArray();
+    private static int CountDigits(ulong number) {
+        Debug.Assert(number > 0);
 
-        return (expected, parameters);
-    }
-
-    private static int CountDigits(long number) {
+        // Not supporting 0 is faster
         var digits = 0;
         while (number > 0) {
             digits++;

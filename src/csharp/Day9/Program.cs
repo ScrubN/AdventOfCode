@@ -1,38 +1,36 @@
-﻿namespace Day9;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+
+namespace Day9;
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllText("Inputs.txt").Select(ToInt).ToArray();
+        var input = File.ReadAllText("Inputs.txt").Select(x => x - '0').ToArray();
+        Debug.Assert(input.All(x => x is >= 0 and <= 9));
 
         var disk1 = InitializeDisk(input);
-        var disk2 = disk1.ToList();
+        var disk2 = disk1.ToArray();
 
-        Part1(disk1);
+        Part1(CollectionsMarshal.AsSpan(disk1));
         Part2(disk2);
 
-        var checksum1 = ComputeChecksum(disk1);
+        var checksum1 = ComputeChecksum(CollectionsMarshal.AsSpan(disk1));
         var checksum2 = ComputeChecksum(disk2);
 
         Console.WriteLine($"Part 1: {checksum1}");
         Console.WriteLine($"Part 2: {checksum2}");
     }
 
-    private static int ToInt(char arg) {
-        if (arg is >= '0' and <= '9') {
-            return arg - '0';
-        }
-
-        throw new ArgumentException(null, nameof(arg));
-    }
-
     private static List<int> InitializeDisk(int[] input) {
-        var disk = new List<int>(input.Length);
+        const int EXPECTED_VALUE = (int)4.5; // Assuming an even distribution of 0-9, the expected value is 4.5
+        var disk = new List<int>(input.Length * EXPECTED_VALUE);
         for (var i = 0; i < input.Length; i++) {
             var id = i % 2 == 0
                 ? i / 2
                 : -1;
 
-            for (var j = 0; j < input[i]; j++) {
+			var count = input[i];
+            for (var j = 0; j < count; j++) {
                 disk.Add(id);
             }
         }
@@ -40,9 +38,9 @@ internal static class Program {
         return disk;
     }
 
-    private static void Part1(List<int> disk) {
+    private static void Part1(Span<int> disk) {
         var first = 0;
-        for (var last = disk.Count - 1; last > first; last--) {
+        for (var last = disk.Length - 1; last > first; last--) {
             var id = disk[last];
             if (id == -1) {
                 continue;
@@ -60,9 +58,9 @@ internal static class Program {
         }
     }
 
-    private static void Part2(List<int> disk) {
+    private static void Part2(Span<int> disk) {
         var firstEmpty = 0;
-        for (var last = disk.Count - 1; last > firstEmpty; last--) {
+        for (var last = disk.Length - 1; last > firstEmpty; last--) {
             var id = disk[last];
             if (id == -1) {
                 continue;
@@ -100,7 +98,7 @@ internal static class Program {
                     disk[last - i] = -1;
                 }
 
-                firstEmpty = disk.IndexOf(-1, firstEmpty);
+                firstEmpty = disk[firstEmpty..].IndexOf(-1) + firstEmpty;
                 break;
             }
 
@@ -108,9 +106,9 @@ internal static class Program {
         }
     }
 
-    private static long ComputeChecksum(List<int> disk) {
+    private static long ComputeChecksum(ReadOnlySpan<int> disk) {
         var checksum = 0L;
-        for (var i = 0; i < disk.Count; i++) {
+        for (var i = 0; i < disk.Length; i++) {
             var item = disk[i];
             if (item == -1) {
                 continue;

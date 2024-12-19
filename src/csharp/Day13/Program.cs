@@ -10,11 +10,15 @@ internal static partial class Program {
     [GeneratedRegex(@"^Prize: X=(\d+), Y=(\d+)$")]
     private static partial Regex PrizeRegex { get; }
 
+    private record struct ClawMachine(Point A, Point B, Point Prize);
+
     private record struct LongPoint(long X, long Y) {
         public static implicit operator LongPoint(Point p) => new(p.X, p.Y);
 
         public static LongPoint operator +(LongPoint a, long b) => new(a.X + b, a.Y + b);
     }
+
+    private record struct ClawMachine2(Point A, Point B, LongPoint Prize);
 
     internal static void Main(string[] args) {
         var machines = GetMachines();
@@ -26,8 +30,8 @@ internal static partial class Program {
         Console.WriteLine(res2);
     }
 
-    private static List<(Point A, Point B, Point Prize)> GetMachines() {
-        List<(Point A, Point B, Point Prize)> machine = [];
+    private static List<ClawMachine> GetMachines() {
+        List<ClawMachine> machine = [];
 
         Point a = default;
         Point b = default;
@@ -35,7 +39,7 @@ internal static partial class Program {
         using var sr = new StreamReader("Inputs.txt");
         while (sr.ReadLine() is { } line) {
             if (string.IsNullOrWhiteSpace(line)) {
-                machine.Add((a, b, prize));
+                machine.Add(new ClawMachine(a, b, prize));
                 a = default;
                 b = default;
                 prize = default;
@@ -54,7 +58,7 @@ internal static partial class Program {
         }
 
         if (a != default && b != default && prize != default) {
-            machine.Add((a, b, prize));
+            machine.Add(new ClawMachine(a, b, prize));
         }
 
         return machine;
@@ -78,7 +82,7 @@ internal static partial class Program {
         return new Point(int.Parse(match.Groups[1].ValueSpan), int.Parse(match.Groups[2].ValueSpan));
     }
 
-    private static long Part1(IEnumerable<(Point A, Point B, Point Prize)> input) {
+    private static long Part1(IEnumerable<ClawMachine> input) {
         var res = 0;
 
         foreach (var machine in input) {
@@ -90,46 +94,48 @@ internal static partial class Program {
         return res;
     }
 
-    private static bool SolveMachine1((Point A, Point B, Point Prize) machine, out int tokens) {
-        var aX = machine.A.X;
-        var aY = machine.A.Y;
+    private static bool SolveMachine1(ClawMachine machine, out int tokens) {
+        if (!CramersRule1(machine.A, machine.B, machine.Prize, out var aPresses, out var bPresses)) {
+            tokens = 0;
+            return false;
+        }
 
-        var bX = machine.B.X;
-        var bY = machine.B.Y;
+        if (aPresses is < 0 or > 100 || !IsWholeNumber(aPresses) || bPresses is < 0 or > 100 || !IsWholeNumber(bPresses)) {
+            tokens = 0;
+            return false;
+        }
 
-        var pX = machine.Prize.X;
-        var pY = machine.Prize.Y;
+        tokens = RoundToInt(aPresses) * 3 + RoundToInt(bPresses);
+        return true;
+    }
 
+    // ReSharper disable once IdentifierTypo
+    private static bool CramersRule1(Point a, Point b, Point p, out double sA, out double sB) {
         // | aX bX |
         // | aY bY |
-        var det = (aX * bY) - (aY * bX);
+        var det = (a.X * b.Y) - (a.Y * b.X);
         if (det == 0) {
-            tokens = 0;
+            sA = 0;
+            sB = 0;
             return false;
         }
 
         // | pX bX |
         // | pY bY |
-        var sA = ((pX * bY) - (pY * bX)) / (double)det;
+        sA = ((p.X * b.Y) - (p.Y * b.X)) / (double)det;
 
         // | aX pX |
         // | aY pY |
-        var sB = ((aX * pY) - (aY * pX)) / (double)det;
-
-        if (sA is < 0 or > 100 || !IsWholeNumber(sA) || sB is < 0 or > 100 || !IsWholeNumber(sB)) {
-            tokens = 0;
-            return false;
-        }
-
-        tokens = RoundToInt(sA) * 3 + RoundToInt(sB);
+        sB = ((a.X * p.Y) - (a.Y * p.X)) / (double)det;
         return true;
     }
 
-    private static ulong Part2(IEnumerable<(Point A, Point B, Point Prize)> input) {
+    private static ulong Part2(IEnumerable<ClawMachine> input) {
         var res = 0UL;
 
-        foreach (var machine in input.Select(x => (x.A, x.B, (LongPoint)x.Prize + 10000000000000))) {
-            if (SolveMachine2(machine, out var tokens)) {
+        foreach (var machine in input) {
+            var machine2 = new ClawMachine2(machine.A, machine.B, (LongPoint)machine.Prize + 10000000000000);
+            if (SolveMachine2(machine2, out var tokens)) {
                 res += tokens;
             }
         }
@@ -137,38 +143,39 @@ internal static partial class Program {
         return res;
     }
 
-    private static bool SolveMachine2((LongPoint A, LongPoint B, LongPoint Prize) machine, out ulong tokens) {
-        var aX = machine.A.X;
-        var aY = machine.A.Y;
+    private static bool SolveMachine2(ClawMachine2 machine, out ulong tokens) {
+        if (!CramersRule2(machine.A, machine.B, machine.Prize, out var aPresses, out var bPresses)) {
+            tokens = 0;
+            return false;
+        }
 
-        var bX = machine.B.X;
-        var bY = machine.B.Y;
+        if (!IsWholeNumber(aPresses) || !IsWholeNumber(bPresses)) {
+            tokens = 0;
+            return false;
+        }
 
-        var pX = machine.Prize.X;
-        var pY = machine.Prize.Y;
+        tokens = RoundToULong(aPresses) * 3 + RoundToULong(bPresses);
+        return true;
+    }
 
+    // ReSharper disable once IdentifierTypo
+    private static bool CramersRule2(Point a, Point b, LongPoint p, out double sA, out double sB) {
         // | aX bX |
         // | aY bY |
-        var det = (aX * bY) - (aY * bX);
+        var det = (a.X * b.Y) - (a.Y * b.X);
         if (det == 0) {
-            tokens = 0;
+            sA = 0;
+            sB = 0;
             return false;
         }
 
         // | pX bX |
         // | pY bY |
-        var sA = ((pX * bY) - (pY * bX)) / (double)det;
+        sA = ((p.X * b.Y) - (p.Y * b.X)) / (double)det;
 
         // | aX pX |
         // | aY pY |
-        var sB = ((aX * pY) - (aY * pX)) / (double)det;
-
-        if (!IsWholeNumber(sA) || !IsWholeNumber(sB)) {
-            tokens = 0;
-            return false;
-        }
-
-        tokens = RoundToULong(sA) * 3 + RoundToULong(sB);
+        sB = ((a.X * p.Y) - (a.Y * p.X)) / (double)det;
         return true;
     }
 

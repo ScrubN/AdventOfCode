@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 
@@ -24,14 +25,10 @@ internal static partial class Program {
     }
 
     private static List<Robot> GetRobots() {
-        var lines = File.ReadAllLines("Inputs.txt");
-
         List<Robot> robots = [];
-        foreach (var line in lines) {
+        foreach (var line in File.ReadLines("Inputs.txt")) {
             var match = RobotRegex.Match(line);
-            if (!match.Success) {
-                throw new FormatException();
-            }
+            Debug.Assert(match.Success);
 
             var position = new Point(int.Parse(match.Groups[1].ValueSpan), int.Parse(match.Groups[2].ValueSpan));
             var velocity = new Point(int.Parse(match.Groups[3].ValueSpan), int.Parse(match.Groups[4].ValueSpan));
@@ -44,19 +41,15 @@ internal static partial class Program {
     private static long Part1(List<Robot> robots) {
         var grid = SetupGrid(robots);
 
-        for (var i = 0; i < 100; i++) {
-            grid = MoveRobots(grid, GRID_WIDTH, GRID_HEIGHT);
-        }
-
-        // PrintGrid(GRID_WIDTH, GRID_HEIGHT, grid);
+        var counts = CountRobotsAfterMove(grid, 100);
 
         // A | B
         // --+--
         // C | D
-        var safetyA = ComputeSafety(0, GRID_WIDTH / 2, 0, GRID_HEIGHT / 2, grid);
-        var safetyB = ComputeSafety((int)Math.Ceiling(GRID_WIDTH / 2d), GRID_WIDTH, 0, GRID_HEIGHT / 2, grid);
-        var safetyC = ComputeSafety(0, GRID_WIDTH / 2, (int)Math.Ceiling(GRID_HEIGHT / 2d), GRID_HEIGHT, grid);
-        var safetyD = ComputeSafety((int)Math.Ceiling(GRID_WIDTH / 2d), GRID_WIDTH, (int)Math.Ceiling(GRID_HEIGHT / 2d), GRID_HEIGHT, grid);
+        var safetyA = ComputeSafety(0, GRID_WIDTH / 2, 0, GRID_HEIGHT / 2, counts);
+        var safetyB = ComputeSafety((int)Math.Ceiling(GRID_WIDTH / 2d), GRID_WIDTH, 0, GRID_HEIGHT / 2, counts);
+        var safetyC = ComputeSafety(0, GRID_WIDTH / 2, (int)Math.Ceiling(GRID_HEIGHT / 2d), GRID_HEIGHT, counts);
+        var safetyD = ComputeSafety((int)Math.Ceiling(GRID_WIDTH / 2d), GRID_WIDTH, (int)Math.Ceiling(GRID_HEIGHT / 2d), GRID_HEIGHT, counts);
 
         return safetyA * safetyB * safetyC * safetyD;
     }
@@ -65,14 +58,11 @@ internal static partial class Program {
         var grid = SetupGrid(robots);
 
         // This should not work but it does lmao
-        var secondsElapsed = 0L;
-        while (true) {
-            grid = MoveRobots(grid, GRID_WIDTH, GRID_HEIGHT);
+        for (var elapsed = 1;; elapsed++) {
+            var counts = CountRobotsAfterMove(grid, elapsed);
 
-            secondsElapsed++;
-
-            if (grid.All(x => x.Value.Count == 1)) {
-                return secondsElapsed;
+            if (counts.Values.All(x => x == 1)) {
+                return elapsed;
             }
         }
     }
@@ -88,66 +78,48 @@ internal static partial class Program {
         return grid;
     }
 
-    private static Dictionary<Point, List<Point>> MoveRobots(Dictionary<Point, List<Point>> grid, int gridWidth, int gridHeight) {
-        var newGrid = new Dictionary<Point, List<Point>>(grid.Count);
+    private static Dictionary<Point, int> CountRobotsAfterMove(Dictionary<Point, List<Point>> grid, int iterations) {
+        var newGrid = new Dictionary<Point, int>();
         foreach (var (oldPosition, velocities) in grid) {
             foreach (var velocity in velocities) {
-                var newPosition = oldPosition.Add(velocity).ConstrainToPositive(gridWidth, gridHeight);
+                var newPosition = oldPosition.Add(velocity.Mult(iterations)).ConstrainToPositive(GRID_WIDTH, GRID_HEIGHT);
 
-                ref var newVelocities = ref CollectionsMarshal.GetValueRefOrAddDefault(newGrid, newPosition, out _);
-                newVelocities ??= [];
-                newVelocities.Add(velocity);
+                ref var robotCount = ref CollectionsMarshal.GetValueRefOrAddDefault(newGrid, newPosition, out _);
+                robotCount++;
             }
         }
 
         return newGrid;
     }
 
-    private static void PrintGrid(int gridWidth, int gridHeight, Dictionary<Point, List<Point>> grid) {
-        for (var y = 0; y < gridHeight; y++) {
-            for (var x = 0; x < gridWidth; x++) {
-                if (grid.TryGetValue(new Point(x, y), out var robots)) {
-                    Console.Write($"{robots.Count:X}");
-                }
-                else {
-                    Console.Write(".");
-                }
-            }
+    private static Point Mult(this Point a, int b) => new(a.X * b, a.Y * b);
 
-            Console.WriteLine();
+    private static Point Add(this Point a, Point b) => new(a.X + b.X, a.Y + b.Y);
+
+    private static Point ConstrainToPositive(this Point a, int maxX, int maxY) {
+        var x = a.X % maxX;
+        if (x < 0) {
+            x += maxX;
         }
+
+        var y = a.Y % maxY;
+        if (y < 0) {
+            y += maxY;
+        }
+
+        return new Point(x, y);
     }
 
-    private static long ComputeSafety(int xStart, int xEnd, int yStart, int yEnd, Dictionary<Point, List<Point>> grid) {
+    private static long ComputeSafety(int xStart, int xEnd, int yStart, int yEnd, Dictionary<Point, int> grid) {
         var safety = 0L;
         for (var y = yStart; y < yEnd; y++) {
             for (var x = xStart; x < xEnd; x++) {
                 if (grid.TryGetValue(new Point(x, y), out var robots)) {
-                    safety += robots.Count;
+                    safety += robots;
                 }
             }
         }
 
         return safety;
-    }
-
-    private static Point Add(this Point a, Point b) => new(a.X + b.X, a.Y + b.Y);
-
-    private static Point ConstrainToPositive(this Point a, int maxX, int maxY) {
-        var x = a.X;
-        while (x < 0) {
-            x += maxX;
-        }
-
-        x %= maxX;
-
-        var y = a.Y;
-        while (y < 0) {
-            y += maxY;
-        }
-
-        y %= maxY;
-
-        return new Point(x, y);
     }
 }

@@ -11,7 +11,7 @@ internal static class Program {
             CollectionsMarshal.GetValueRefOrAddDefault(occurrences, id, out _)++;
         }
 
-        var (distance, similarity) = GetIdMetrics(ids1, ids2, occurrences);
+        var (distance, similarity) = GetIdMetrics(CollectionsMarshal.AsSpan(ids1), CollectionsMarshal.AsSpan(ids2), occurrences);
 
         Console.WriteLine($"Part 1: {distance}");
         Console.WriteLine($"Part 2: {similarity}");
@@ -33,10 +33,10 @@ internal static class Program {
         return (ids1, ids2);
     }
 
-    private static (int distance, int similarity) GetIdMetrics(List<int> ids1, List<int> ids2, Dictionary<int, int> occurrences) {
+    private static (int distance, int similarity) GetIdMetrics(ReadOnlySpan<int> ids1, ReadOnlySpan<int> ids2, Dictionary<int, int> occurrences) {
         var distance = 0;
         var similarity = 0;
-        for (var i = 0; i < ids1.Count; i++) {
+        for (var i = 0; i < ids1.Length; i++) {
             var id1 = ids1[i];
             var id2 = ids2[i];
 

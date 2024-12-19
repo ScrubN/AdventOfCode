@@ -4,7 +4,9 @@ namespace Day6;
 
 internal static class Program {
     internal static void Main(string[] args) {
-        var input = File.ReadAllLines("Inputs.txt").Select(x => x.ToArray()).ToArray();
+        var input = File.ReadLines("Inputs.txt")
+            .Select(x => x.ToArray())
+            .ToArray();
 
         var start = FindStart(input);
 

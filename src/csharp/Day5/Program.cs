@@ -6,8 +6,8 @@ internal static class Program {
     internal static void Main(string[] args) {
         var (pageOrdering, manuals) = GetInput();
 
-        var sum1 = Part1(manuals, pageOrdering);
-        var sum2 = Part2(manuals, pageOrdering);
+        var sum1 = Part1(CollectionsMarshal.AsSpan(manuals), pageOrdering);
+        var sum2 = Part2(CollectionsMarshal.AsSpan(manuals), pageOrdering);
 
         Console.WriteLine($"Part 1: {sum1}");
         Console.WriteLine($"Part 2: {sum2}");
@@ -22,8 +22,9 @@ internal static class Program {
                 break;
             }
 
-            var a = byte.Parse(line.AsSpan(0, line.IndexOf('|')));
-            var b = byte.Parse(line.AsSpan(line.IndexOf('|') + 1));
+            var separator = line.IndexOf('|');
+            var a = byte.Parse(line.AsSpan(0, separator));
+            var b = byte.Parse(line.AsSpan(separator + 1));
             ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(pageOrdering, a, out _);
             set ??= [];
             set.Add(b);
@@ -37,7 +38,7 @@ internal static class Program {
         return (pageOrdering, manuals);
     }
 
-    private static int Part1(List<byte[]> manuals, Dictionary<byte, HashSet<byte>> pageOrdering) {
+    private static int Part1(ReadOnlySpan<byte[]> manuals, Dictionary<byte, HashSet<byte>> pageOrdering) {
         List<byte[]> validManuals = [];
         foreach (var pageNumbers in manuals) {
             var numbers = new HashSet<byte>(pageNumbers);
@@ -72,7 +73,7 @@ internal static class Program {
         return sum;
     }
 
-    private static int Part2(List<byte[]> manuals, Dictionary<byte, HashSet<byte>> pageOrdering) {
+    private static int Part2(ReadOnlySpan<byte[]> manuals, Dictionary<byte, HashSet<byte>> pageOrdering) {
         List<List<byte>> invalidManuals = [];
         foreach (var manual in manuals) {
             var numbers = new HashSet<byte>(manual);

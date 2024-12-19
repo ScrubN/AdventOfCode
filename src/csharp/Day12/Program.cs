@@ -4,39 +4,51 @@ using System.Drawing;
 namespace Day12;
 
 internal static class Program {
+    private enum Direction {
+        Up,
+        Down,
+        Left,
+        Right
+    }
+
+    private static readonly Point NoPoint = new(-1, -1);
+
     internal static void Main(string[] args) {
         var input = File.ReadAllLines("Inputs.txt");
+        var points = input
+            .SelectMany((s, y) => s.Select((_, x) => new Point(x, y)))
+            .ToArray();
 
-        var cost1 = Part1(input);
-        var cost2 = Part2(input);
+        var cost1 = Part1(input, points);
+        var cost2 = Part2(input, points);
 
         Console.WriteLine($"Part 1: {cost1}");
         Console.WriteLine($"Part 2: {cost2}");
     }
 
-    private static int Part1(string[] input) {
-        var points = input
-            .SelectMany((s, y) => s.Select((_, x) => (Point?)new Point(x, y)))
-            .ToHashSet();
+    private static int Part1(string[] input, Point[] inputPoints) {
+        var points = inputPoints.ToHashSet();
 
-        List<int> costs = [];
-        while (points.FirstOrDefault() is { } start) {
+        var cost = 0;
+        Point start;
+        while ((start = points.FirstOrDefault(NoPoint)) != NoPoint) {
             var discovered = FloodFill(input, points, start);
 
             var area = discovered.Count;
             var perimeter = ComputePerimeter(discovered);
-            costs.Add(area * perimeter);
+            cost += area * perimeter;
         }
 
-        return costs.Sum();
+        return cost;
     }
 
-    private static HashSet<Point> FloodFill(string[] input, HashSet<Point?> points, Point start) {
+    private static HashSet<Point> FloodFill(string[] input, HashSet<Point> points, Point start) {
         var type = input[start.Y][start.X];
         HashSet<Point> discovered = [];
-        HashSet<Point?> queue = [start];
+        HashSet<Point> queue = [start];
 
-        while (queue.FirstOrDefault() is { } point) {
+        Point point;
+        while ((point = queue.FirstOrDefault(NoPoint)) != NoPoint) {
             queue.Remove(point);
 
             Debug.Assert(input[point.Y][point.X] == type);
@@ -65,7 +77,7 @@ internal static class Program {
                     }
 
                     var newPoint = new Point(x2, y2);
-                    if (points.Contains(newPoint) && !discovered.Contains(newPoint)) {
+                    if (!discovered.Contains(newPoint)) {
                         queue.Add(newPoint);
                     }
                 }
@@ -98,51 +110,43 @@ internal static class Program {
         return perimeter;
     }
 
-    private static int Part2(string[] input) {
-        var points = input
-            .SelectMany((s, y) => s.Select((_, x) => (Point?)new Point(x, y)))
-            .ToHashSet();
+    private static int Part2(string[] input, Point[] inputPoints) {
+        var points = inputPoints.ToHashSet();
 
-        List<int> costs = [];
-        while (points.FirstOrDefault() is { } start) {
+        var cost = 0;
+        Point start;
+        while ((start = points.FirstOrDefault(NoPoint)) != NoPoint) {
             var discovered = FloodFill(input, points, start);
 
             var area = discovered.Count;
             var sides = ComputeSides(discovered);
-            costs.Add(area * sides);
+            cost += area * sides;
         }
 
-        return costs.Sum();
-    }
-
-    private enum Direction {
-        Up,
-        Down,
-        Left,
-        Right
+        return cost;
     }
 
     private static int ComputeSides(HashSet<Point> discovered) {
-        HashSet<(Point point, Direction direction)> sides = [];
+        HashSet<(Point point, Direction normal)> sides = [];
         foreach (var point in discovered) {
             var newPoint = point with { X = point.X + 1 };
             if (!discovered.Contains(newPoint)) {
-                sides.Add((newPoint, Direction.Right));
+                sides.Add((point, Direction.Right));
             }
 
             newPoint = point with { X = point.X - 1 };
             if (!discovered.Contains(newPoint)) {
-                sides.Add((newPoint, Direction.Left));
+                sides.Add((point, Direction.Left));
             }
 
             newPoint = point with { Y = point.Y + 1 };
             if (!discovered.Contains(newPoint)) {
-                sides.Add((newPoint, Direction.Down));
+                sides.Add((point, Direction.Down));
             }
 
             newPoint = point with { Y = point.Y - 1 };
             if (!discovered.Contains(newPoint)) {
-                sides.Add((newPoint, Direction.Up));
+                sides.Add((point, Direction.Up));
             }
         }
 
