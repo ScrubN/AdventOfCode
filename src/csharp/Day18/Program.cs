@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Drawing;
+﻿using System.Drawing;
 
 namespace Day18;
 
@@ -10,7 +9,10 @@ internal static class Program {
 
     internal static void Main(string[] args) {
         var input = File.ReadLines("Inputs.txt")
-            .Select(x => new Point(int.Parse(x.AsSpan(0, x.IndexOf(','))), int.Parse(x.AsSpan(x.IndexOf(',') + 1))))
+            .Select(x => {
+                var i = x.IndexOf(',');
+                return new Point(int.Parse(x.AsSpan(0, i)), int.Parse(x.AsSpan(i + 1)));
+            })
             .ToArray();
 
         var steps = Part1(input);
@@ -21,33 +23,29 @@ internal static class Program {
     }
 
     private static int Part1(Point[] input) {
-        var grid = new bool[GRID_SIZE][];
-        for (var i = 0; i < grid.Length; i++) {
-            grid[i] = new bool[GRID_SIZE];
-        }
+        var grid = new bool[GRID_SIZE, GRID_SIZE];
 
+        var length0 = grid.GetLength(0);
+        var length1 = grid.GetLength(1);
         for (var i = 0; i < 1024; i++) {
             var point = input[i];
-            if (point.Y >= grid.Length || point.X >= grid[0].Length) {
+            if (point.Y >= length0 || point.X >= length1) {
                 continue;
             }
 
-            grid[point.Y][point.X] = true;
+            grid[point.X, point.Y] = true;
         }
 
         return Bfs(grid)?.Count ?? -1;
     }
 
     private static Point Part2(Point[] input) {
-        var grid = new bool[GRID_SIZE][];
-        for (var y = 0; y < grid.Length; y++) {
-            grid[y] = new bool[GRID_SIZE];
-        }
+        var grid = new bool[GRID_SIZE, GRID_SIZE];
 
         var i = 0;
         for (; i < 1024; i++) {
             var point = input[i];
-            grid[point.Y][point.X] = true;
+            grid[point.X, point.Y] = true;
         }
 
         HashSet<Point>? path = null;
@@ -59,7 +57,7 @@ internal static class Program {
 
             i++;
             var point = input[i];
-            grid[point.Y][point.X] = true;
+            grid[point.X, point.Y] = true;
 
             // Only recompute BFS if the newly added point is on the solution path
             if (path.Contains(point)) {
@@ -68,12 +66,14 @@ internal static class Program {
         }
     }
 
-    private static HashSet<Point>? Bfs(bool[][] grid) {
+    private static HashSet<Point>? Bfs(bool[,] grid) {
         var discovered = new HashSet<Point>();
         var queue = new Queue<BfsNode>();
         queue.Enqueue(new BfsNode(null, new Point(0, 0)));
 
-        var end = new Point(grid.Length - 1, grid[0].Length - 1);
+        var length0 = grid.GetLength(0);
+        var length1 = grid.GetLength(1);
+        var end = new Point(length0 - 1, length1 - 1);
         while (queue.TryDequeue(out var node)) {
             if (node.Pos == end) {
                 return RetracePath(node);
@@ -81,13 +81,13 @@ internal static class Program {
 
             for (var y = -1; y <= 1; y++) {
                 var y2 = node.Pos.Y + y;
-                if (y2 < 0 || y2 >= grid.Length) {
+                if (y2 < 0 || y2 >= length0) {
                     continue;
                 }
 
                 for (var x = -1; x <= 1; x++) {
                     var x2 = node.Pos.X + x;
-                    if (x2 < 0 || x2 >= grid[0].Length) {
+                    if (x2 < 0 || x2 >= length1) {
                         continue;
                     }
 
@@ -95,7 +95,7 @@ internal static class Program {
                         continue;
                     }
 
-                    if (grid[y2][x2]) {
+                    if (grid[x2, y2]) {
                         continue;
                     }
 
