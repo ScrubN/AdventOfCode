@@ -11,18 +11,18 @@ internal static class Program {
         Right
     }
 
-    private record BfsNode(BfsNode? Parent, Point Position, int Cost);
+    private record struct BfsNode(Point Position, int Cost);
 
     internal static void Main(string[] args) {
         var (track, start, end) = GetInput();
 
         // PrintTrack(track, start, end);
 
-        // var count1 = Part1(track);
+        var count1 = Part1(track);
         var count2 = Part2(track);
 
-        // Console.WriteLine(count1);
-        Console.WriteLine(count2);
+        Console.WriteLine($"Part 1: {count1}");
+        Console.WriteLine($"Part 2: {count2}");
     }
 
     private static (int[,] track, Point start, Point end) GetInput() {
@@ -158,7 +158,6 @@ internal static class Program {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff, point.Y + yDiff));
             }
-
         }
 
         //  12
@@ -188,45 +187,18 @@ internal static class Program {
         var length1 = track.GetLength(1);
         for (var y = 0; y < length0; y++) {
             for (var x = 0; x < length1; x++) {
-                var start = new Point(x, y);
                 var initialCost = track[x, y];
                 if (initialCost == -1) {
                     continue;
                 }
 
-                // #
-                // .
-                var newPoint = new Point(x, y - 1);
-                if (track[x, y - 1] == -1) {
-                    ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, start, out _);
-                    set ??= [];
-                    FindCheats2(track, newPoint, initialCost, set);
-                }
+                ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, new Point(x, y), out _);
+                set ??= [];
 
-                // #.
-                newPoint = new Point(x - 1, y);
-                if (track[x - 1, y] == -1) {
-                    ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, start, out _);
-                    set ??= [];
-                    FindCheats2(track, newPoint, initialCost, set);
-                }
-
-                // .#
-                newPoint = new Point(x + 1, y);
-                if (track[x + 1, y] == -1) {
-                    ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, start, out _);
-                    set ??= [];
-                    FindCheats2(track, newPoint, initialCost, set);
-                }
-
-                // .
-                // #
-                newPoint = new Point(x, y + 1);
-                if (track[x, y + 1] == -1) {
-                    ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, start, out _);
-                    set ??= [];
-                    FindCheats2(track, newPoint, initialCost, set);
-                }
+                FindCheats2(track, new Point(x, y - 1), initialCost, set);
+                FindCheats2(track, new Point(x, y + 1), initialCost, set);
+                FindCheats2(track, new Point(x - 1, y), initialCost, set);
+                FindCheats2(track, new Point(x + 1, y), initialCost, set);
             }
         }
 
@@ -234,12 +206,12 @@ internal static class Program {
     }
 
     private static void FindCheats2(int[,] track, Point start, int initialCost, HashSet<Point> cheats) {
-        const int COST_THRESHOLD = 76;
-        const int CHEAT_LENGTH = 6;
+        const int COST_THRESHOLD = 100;
+        const int CHEAT_LENGTH = 20;
 
         var visited = new HashSet<Point>();
         var queue = new Queue<BfsNode>();
-        queue.Enqueue(new BfsNode(null, start, 1));
+        queue.Enqueue(new BfsNode(start, 1));
 
         while (queue.TryDequeue(out var node)) {
             foreach (var neighbor in GetNeighbors(node)) {
@@ -252,7 +224,7 @@ internal static class Program {
                     var deltaCost = cost - initialCost - (neighbor.Cost - 1);
                     if (deltaCost >= COST_THRESHOLD) {
                         if (cheats.Add(neighbor.Position)) {
-                            PrintTrack(track, start, neighbor.Position);
+                            // PrintTrack(track, start, neighbor.Position);
                         }
                     }
                 }
@@ -274,10 +246,10 @@ internal static class Program {
                 continue;
             }
 
-            var newPos = node.Position with{ X = node.Position.X + x, Y = node.Position.Y + y };
+            var newPos = node.Position with { X = node.Position.X + x, Y = node.Position.Y + y };
             var newCost = node.Cost + 1;
 
-            yield return new BfsNode(node, newPos, newCost);
+            yield return new BfsNode(newPos, newCost);
         }
     }
 
