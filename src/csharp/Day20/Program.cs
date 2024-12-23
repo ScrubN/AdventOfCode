@@ -1,6 +1,6 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 
 namespace Day20;
 
@@ -85,10 +85,11 @@ internal static class Program {
     private static int Part1(short[,] track) {
         var count = 0;
 
-        var length0 = track.GetLength(0);
-        var length1 = track.GetLength(1);
-        for (var y = 0; y < length0; y++)
-        for (var x = 0; x < length1; x++) {
+        // Assume edges are walls, no point searching them
+        var maxY = track.GetLength(0) - 1;
+        var maxX = track.GetLength(1) - 1;
+        for (var y = 1; y < maxY; y++)
+        for (var x = 1; x < maxX; x++) {
             var initialCost = track[x, y];
             if (initialCost == -1) {
                 continue;
@@ -97,30 +98,30 @@ internal static class Program {
             // #
             // .
             if (track[x, y - 1] == -1) {
-                count += CountCheats1(track, new Point(x, y - 1), Direction.Up, initialCost);
+                count += CountCheats1(track, x, y - 1, Direction.Up, initialCost);
             }
 
             // #.
             if (track[x - 1, y] == -1) {
-                count += CountCheats1(track, new Point(x - 1, y), Direction.Left, initialCost);
+                count += CountCheats1(track, x - 1, y, Direction.Left, initialCost);
             }
 
             // .#
             if (track[x + 1, y] == -1) {
-                count += CountCheats1(track, new Point(x + 1, y), Direction.Right, initialCost);
+                count += CountCheats1(track, x + 1, y, Direction.Right, initialCost);
             }
 
             // .
             // #
             if (track[x, y + 1] == -1) {
-                count += CountCheats1(track, new Point(x, y + 1), Direction.Down, initialCost);
+                count += CountCheats1(track, x, y + 1, Direction.Down, initialCost);
             }
         }
 
         return count;
     }
 
-    private static int CountCheats1(short[,] track, Point point, Direction direction, int initialCost) {
+    private static int CountCheats1(short[,] track, int pointX, int pointY, Direction direction, int initialCost) {
         const int COST_THRESHOLD = 100;
         var cheats = 0;
 
@@ -136,7 +137,7 @@ internal static class Program {
         //  1
         // #.#
         int cost;
-        if ((cost = track.TryIndex(point.X + xDiff, point.Y + yDiff, (short)-1)) != -1) {
+        if ((cost = track.TryIndex(pointX + xDiff, pointY + yDiff, (short)-1)) != -1) {
             if (cost - 1 - initialCost >= COST_THRESHOLD) {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff, point.Y + yDiff));
@@ -153,7 +154,7 @@ internal static class Program {
 
         // 21
         // #.#
-        if ((cost = track.TryIndex(point.X + xDiff, point.Y + yDiff, (short)-1)) != -1) {
+        if ((cost = track.TryIndex(pointX + xDiff, pointY + yDiff, (short)-1)) != -1) {
             if (cost - 1 - initialCost >= COST_THRESHOLD) {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff, point.Y + yDiff));
@@ -162,7 +163,7 @@ internal static class Program {
 
         //  12
         // #.#
-        if ((cost = track.TryIndex(point.X + xDiff * -1, point.Y + yDiff * -1, (short)-1)) != -1) {
+        if ((cost = track.TryIndex(pointX + xDiff * -1, pointY + yDiff * -1, (short)-1)) != -1) {
             if (cost - 1 - initialCost >= COST_THRESHOLD) {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff * -1, point.Y + yDiff * -1));
@@ -183,30 +184,30 @@ internal static class Program {
     private static int Part2(short[,] track) {
         var sum = 0;
 
-        var length0 = track.GetLength(0);
-        var length1 = track.GetLength(1);
-        for (var y = 0; y < length0; y++)
-        for (var x = 0; x < length1; x++) {
+        // Assume edges are walls, no point searching them
+        var maxY = track.GetLength(0) - 1;
+        var maxX = track.GetLength(1) - 1;
+        for (var y = 1; y < maxY; y++)
+        for (var x = 1; x < maxX; x++) {
             var initialCost = track[x, y];
             if (initialCost == -1) {
                 continue;
             }
 
-            sum += FindCheats2(track, new Point(x, y), initialCost);
+            sum += FindCheats2Manhattan(track, x, y, initialCost);
         }
 
         return sum;
     }
 
-    // This could be faster with a for loop instead of BFS because the max cheat length is a known value
-    private static int FindCheats2(short[,] track, Point start, int initialCost) {
+    private static int FindCheats2Bfs(short[,] track, int startX, int startY, int initialCost) {
         const int COST_THRESHOLD = 100;
         const int CHEAT_LENGTH = 20;
 
         var cheats = new HashSet<long>();
         var visited = new HashSet<long>();
         var queue = new Queue<BfsNode>();
-        queue.Enqueue(new BfsNode(start, 0));
+        queue.Enqueue(new BfsNode(new Point(startX, startY), 0));
 
         while (queue.TryDequeue(out var node)) {
             for (var y = -1; y < 2; y++)
@@ -243,11 +244,58 @@ internal static class Program {
         return cheats.Count;
     }
 
-    private static void PrintTrack(int[,] track, Point start, Point end) {
-        var length0 = track.GetLength(0);
-        var length1 = track.GetLength(1);
-        for (var y = 0; y < length0; y++) {
-            for (var x = 0; x < length1; x++) {
+    private static int FindCheats2Manhattan(short[,] track, int startX, int startY, int initialCost) {
+        const int COST_THRESHOLD = 100;
+        const int CHEAT_LENGTH = 20;
+
+        var cheatCount = 0;
+
+        var maxY = track.GetLength(0);
+        var maxX = track.GetLength(1);
+        for (var y = -CHEAT_LENGTH; y <= CHEAT_LENGTH; y++) {
+            var pointY = startY + y;
+            if (pointY < 0 || pointY >= maxY) {
+                continue;
+            }
+
+            var manhattanY = Math.Abs(y);
+
+            var deltaX = CHEAT_LENGTH - manhattanY;
+            for (var x = -deltaX; x <= deltaX; x++) {
+                var pointX = startX + x;
+                if (pointX < 0 || pointX >= maxX) {
+                    continue;
+                }
+
+                // 5-10% faster to omit this
+                // if (pointX == startX && pointY == startY) {
+                //     continue;
+                // }
+
+                var cost = track[pointX, pointY];
+                if (cost == -1) {
+                    continue;
+                }
+
+                var manhattanDistance = Math.Abs(x) + manhattanY;
+                Debug.Assert(manhattanDistance <= CHEAT_LENGTH);
+
+                var deltaCost = cost - initialCost - manhattanDistance;
+                if (deltaCost >= COST_THRESHOLD) {
+                    cheatCount++;
+                    // PrintTrack(track, new Point(startX, startY), new Point(pointX, pointY));
+                }
+            }
+        }
+
+        return cheatCount;
+    }
+
+    private static void PrintTrack(short[,] track, Point start, Point end) {
+        var maxY = track.GetLength(0);
+        var maxX = track.GetLength(1);
+        for (var y = 0; y < maxY; y++) {
+            for (var x = 0; x < maxX; x++) {
                 var resetColor = false;
                 if (start.X == x && start.Y == y) {
                     Console.BackgroundColor = ConsoleColor.DarkGreen;
