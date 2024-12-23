@@ -26,9 +26,9 @@ internal static class Program {
         Console.WriteLine($"Part 2: {count2}");
     }
 
-    private static (int[,] track, Point start, Point end) GetInput() {
+    private static (short[,] track, Point start, Point end) GetInput() {
         var input = File.ReadAllLines("Inputs.txt");
-        var track = new int[input.Length, input[0].Length];
+        var track = new short[input.Length, input[0].Length];
 
         var start = default(Point);
         var end = default(Point);
@@ -47,7 +47,7 @@ internal static class Program {
         }
 
         var current = start;
-        var picoseconds = 0;
+        var picoseconds = (short)0;
         while (true) {
             track[current.X, current.Y] = picoseconds;
             picoseconds++;
@@ -82,46 +82,45 @@ internal static class Program {
         return (track, start, end);
     }
 
-    private static int Part1(int[,] track) {
+    private static int Part1(short[,] track) {
         var count = 0;
 
         var length0 = track.GetLength(0);
         var length1 = track.GetLength(1);
-        for (var y = 0; y < length0; y++) {
-            for (var x = 0; x < length1; x++) {
-                var initialCost = track[x, y];
-                if (initialCost == -1) {
-                    continue;
-                }
+        for (var y = 0; y < length0; y++)
+        for (var x = 0; x < length1; x++) {
+            var initialCost = track[x, y];
+            if (initialCost == -1) {
+                continue;
+            }
 
-                // #
-                // .
-                if (track[x, y - 1] == -1) {
-                    count += CountCheats1(track, new Point(x, y - 1), Direction.Up, initialCost);
-                }
+            // #
+            // .
+            if (track[x, y - 1] == -1) {
+                count += CountCheats1(track, new Point(x, y - 1), Direction.Up, initialCost);
+            }
 
-                // #.
-                if (track[x - 1, y] == -1) {
-                    count += CountCheats1(track, new Point(x - 1, y), Direction.Left, initialCost);
-                }
+            // #.
+            if (track[x - 1, y] == -1) {
+                count += CountCheats1(track, new Point(x - 1, y), Direction.Left, initialCost);
+            }
 
-                // .#
-                if (track[x + 1, y] == -1) {
-                    count += CountCheats1(track, new Point(x + 1, y), Direction.Right, initialCost);
-                }
+            // .#
+            if (track[x + 1, y] == -1) {
+                count += CountCheats1(track, new Point(x + 1, y), Direction.Right, initialCost);
+            }
 
-                // .
-                // #
-                if (track[x, y + 1] == -1) {
-                    count += CountCheats1(track, new Point(x, y + 1), Direction.Down, initialCost);
-                }
+            // .
+            // #
+            if (track[x, y + 1] == -1) {
+                count += CountCheats1(track, new Point(x, y + 1), Direction.Down, initialCost);
             }
         }
 
         return count;
     }
 
-    private static int CountCheats1(int[,] track, Point point, Direction direction, int initialCost) {
+    private static int CountCheats1(short[,] track, Point point, Direction direction, int initialCost) {
         const int COST_THRESHOLD = 100;
         var cheats = 0;
 
@@ -137,7 +136,7 @@ internal static class Program {
         //  1
         // #.#
         int cost;
-        if ((cost = track.TryIndex(point.X + xDiff, point.Y + yDiff, -1)) != -1) {
+        if ((cost = track.TryIndex(point.X + xDiff, point.Y + yDiff, (short)-1)) != -1) {
             if (cost - 1 - initialCost >= COST_THRESHOLD) {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff, point.Y + yDiff));
@@ -154,7 +153,7 @@ internal static class Program {
 
         // 21
         // #.#
-        if ((cost = track.TryIndex(point.X + xDiff, point.Y + yDiff, -1)) != -1) {
+        if ((cost = track.TryIndex(point.X + xDiff, point.Y + yDiff, (short)-1)) != -1) {
             if (cost - 1 - initialCost >= COST_THRESHOLD) {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff, point.Y + yDiff));
@@ -163,7 +162,7 @@ internal static class Program {
 
         //  12
         // #.#
-        if ((cost = track.TryIndex(point.X + xDiff * -1, point.Y + yDiff * -1, -1)) != -1) {
+        if ((cost = track.TryIndex(point.X + xDiff * -1, point.Y + yDiff * -1, (short)-1)) != -1) {
             if (cost - 1 - initialCost >= COST_THRESHOLD) {
                 cheats++;
                 // PrintTrack(track, point, new Point(point.X + xDiff * -1, point.Y + yDiff * -1));
@@ -181,39 +180,30 @@ internal static class Program {
         return arr[x, y];
     }
 
-    private static int Part2(int[,] track) {
-        var cheats = new Dictionary<long, HashSet<long>>();
+    private static int Part2(short[,] track) {
+        var sum = 0;
 
         var length0 = track.GetLength(0);
         var length1 = track.GetLength(1);
-        for (var y = 0; y < length0; y++) {
-            for (var x = 0; x < length1; x++) {
-                var initialCost = track[x, y];
-                if (initialCost == -1) {
-                    continue;
-                }
-
-                var start = new Point(x, y);
-                ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, Unsafe.As<Point, long>(ref start), out _);
-                set ??= [];
-
-                FindCheats2(track, start, initialCost, set);
+        for (var y = 0; y < length0; y++)
+        for (var x = 0; x < length1; x++) {
+            var initialCost = track[x, y];
+            if (initialCost == -1) {
+                continue;
             }
-        }
 
-        var sum = 0;
-        foreach (var set in cheats.Values) {
-            sum += set.Count;
+            sum += FindCheats2(track, new Point(x, y), initialCost);
         }
 
         return sum;
     }
 
     // This could be faster with a for loop instead of BFS because the max cheat length is a known value
-    private static void FindCheats2(int[,] track, Point start, int initialCost, HashSet<long> cheats) {
+    private static int FindCheats2(short[,] track, Point start, int initialCost) {
         const int COST_THRESHOLD = 100;
         const int CHEAT_LENGTH = 20;
 
+        var cheats = new HashSet<long>();
         var visited = new HashSet<long>();
         var queue = new Queue<BfsNode>();
         queue.Enqueue(new BfsNode(start, 0));
@@ -234,7 +224,7 @@ internal static class Program {
                 }
 
                 var newPos = new Point(node.Position.X + x, node.Position.Y + y);
-                var cost = track.TryIndex(newPos.X, newPos.Y, -1);
+                var cost = track.TryIndex(newPos.X, newPos.Y, (short)-1);
                 if (cost != -1) {
                     var deltaCost = cost - initialCost - (newCost - 1);
                     if (deltaCost >= COST_THRESHOLD) {
@@ -249,6 +239,8 @@ internal static class Program {
                 }
             }
         }
+
+        return cheats.Count;
     }
 
     private static void PrintTrack(int[,] track, Point start, Point end) {
