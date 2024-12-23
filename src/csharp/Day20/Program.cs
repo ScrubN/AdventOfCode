@@ -1,4 +1,5 @@
 ﻿using System.Drawing;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Day20;
@@ -181,7 +182,7 @@ internal static class Program {
     }
 
     private static int Part2(int[,] track) {
-        var cheats = new Dictionary<Point, HashSet<Point>>();
+        var cheats = new Dictionary<long, HashSet<long>>();
 
         var length0 = track.GetLength(0);
         var length1 = track.GetLength(1);
@@ -193,61 +194,60 @@ internal static class Program {
                 }
 
                 var start = new Point(x, y);
-                ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, start, out _);
+                ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, Unsafe.As<Point, long>(ref start), out _);
                 set ??= [];
 
                 FindCheats2(track, start, initialCost, set);
             }
         }
 
-        return cheats.Sum(x => x.Value.Count);
+        var sum = 0;
+        foreach (var set in cheats.Values) {
+            sum += set.Count;
+        }
+
+        return sum;
     }
 
-    private static void FindCheats2(int[,] track, Point start, int initialCost, HashSet<Point> cheats) {
+    // This could be faster with a for loop instead of BFS because the max cheat length is a known value
+    private static void FindCheats2(int[,] track, Point start, int initialCost, HashSet<long> cheats) {
         const int COST_THRESHOLD = 100;
         const int CHEAT_LENGTH = 20;
 
-        var visited = new HashSet<Point>();
+        var visited = new HashSet<long>();
         var queue = new Queue<BfsNode>();
         queue.Enqueue(new BfsNode(start, 0));
 
         while (queue.TryDequeue(out var node)) {
-            foreach (var neighbor in GetNeighbors(node)) {
-                if (neighbor.Cost > CHEAT_LENGTH) {
+            for (var y = -1; y < 2; y++)
+            for (var x = -1; x < 2; x++) {
+                // x | 0 | x
+                // 0 | x | 0
+                // x | 0 | x
+                if (Math.Abs(x) == Math.Abs(y)) {
                     continue;
                 }
 
-                var cost = track.TryIndex(neighbor.Position.X, neighbor.Position.Y, -1);
+                var newCost = node.Cost + 1;
+                if (newCost > CHEAT_LENGTH) {
+                    continue;
+                }
+
+                var newPos = new Point(node.Position.X + x, node.Position.Y + y);
+                var cost = track.TryIndex(newPos.X, newPos.Y, -1);
                 if (cost != -1) {
-                    var deltaCost = cost - initialCost - (neighbor.Cost - 1);
+                    var deltaCost = cost - initialCost - (newCost - 1);
                     if (deltaCost >= COST_THRESHOLD) {
-                        if (cheats.Add(neighbor.Position)) {
-                            // PrintTrack(track, start, neighbor.Position);
+                        if (cheats.Add(Unsafe.As<Point, long>(ref newPos))) {
+                            // PrintTrack(track, start, newPos);
                         }
                     }
                 }
 
-                if (visited.Add(neighbor.Position)) {
-                    queue.Enqueue(neighbor);
+                if (visited.Add(Unsafe.As<Point, long>(ref newPos))) {
+                    queue.Enqueue(new BfsNode(newPos, newCost));
                 }
             }
-        }
-    }
-
-    private static IEnumerable<BfsNode> GetNeighbors(BfsNode node) {
-        for (var y = -1; y < 2; y++)
-        for (var x = -1; x < 2; x++) {
-            // x | 0 | x
-            // 0 | x | 0
-            // x | 0 | x
-            if (Math.Abs(x) == Math.Abs(y)) {
-                continue;
-            }
-
-            var newPos = node.Position with { X = node.Position.X + x, Y = node.Position.Y + y };
-            var newCost = node.Cost + 1;
-
-            yield return new BfsNode(newPos, newCost);
         }
     }
 
