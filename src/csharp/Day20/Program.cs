@@ -192,13 +192,11 @@ internal static class Program {
                     continue;
                 }
 
-                ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, new Point(x, y), out _);
+                var start = new Point(x, y);
+                ref var set = ref CollectionsMarshal.GetValueRefOrAddDefault(cheats, start, out _);
                 set ??= [];
 
-                FindCheats2(track, new Point(x, y - 1), initialCost, set);
-                FindCheats2(track, new Point(x, y + 1), initialCost, set);
-                FindCheats2(track, new Point(x - 1, y), initialCost, set);
-                FindCheats2(track, new Point(x + 1, y), initialCost, set);
+                FindCheats2(track, start, initialCost, set);
             }
         }
 
@@ -211,7 +209,7 @@ internal static class Program {
 
         var visited = new HashSet<Point>();
         var queue = new Queue<BfsNode>();
-        queue.Enqueue(new BfsNode(start, 1));
+        queue.Enqueue(new BfsNode(start, 0));
 
         while (queue.TryDequeue(out var node)) {
             foreach (var neighbor in GetNeighbors(node)) {
