@@ -15,40 +15,41 @@ internal static class Program {
     private record struct BfsNode(Point Position, int Cost);
 
     internal static void Main(string[] args) {
-        var (track, start, end) = GetInput();
+        var (track, start, end, path) = GetInput();
 
         // PrintTrack(track, start, end);
 
-        var count1 = Part1(track);
-        var count2 = Part2(track);
+        var count1 = Part1(track, path);
+        var count2 = Part2(track, path);
 
         Console.WriteLine($"Part 1: {count1}");
         Console.WriteLine($"Part 2: {count2}");
     }
 
-    private static (short[,] track, Point start, Point end) GetInput() {
+    private static (short[,] track, Point start, Point end, List<Point> path) GetInput() {
         var input = File.ReadAllLines("Inputs.txt");
         var track = new short[input.Length, input[0].Length];
 
         var start = default(Point);
         var end = default(Point);
-        for (var y = 0; y < input.Length; y++) {
-            for (var x = 0; x < input[y].Length; x++) {
-                if (input[y][x] == '#') {
-                    track[x, y] = -1;
-                }
-                else if (input[y][x] == 'S') {
-                    start = new Point(x, y);
-                }
-                else if (input[y][x] == 'E') {
-                    end = new Point(x, y);
-                }
+        for (var y = 0; y < input.Length; y++)
+        for (var x = 0; x < input[y].Length; x++) {
+            if (input[y][x] == '#') {
+                track[x, y] = -1;
+            }
+            else if (input[y][x] == 'S') {
+                start = new Point(x, y);
+            }
+            else if (input[y][x] == 'E') {
+                end = new Point(x, y);
             }
         }
 
+        var path = new List<Point>();
         var current = start;
         var picoseconds = (short)0;
         while (true) {
+            path.Add(current);
             track[current.X, current.Y] = picoseconds;
             picoseconds++;
 
@@ -79,21 +80,16 @@ internal static class Program {
             break;
         }
 
-        return (track, start, end);
+        return (track, start, end, path);
     }
 
-    private static int Part1(short[,] track) {
+    private static int Part1(short[,] track, List<Point> path) {
         var count = 0;
 
-        // Assume edges are walls, no point searching them
-        var maxY = track.GetLength(0) - 1;
-        var maxX = track.GetLength(1) - 1;
-        for (var y = 1; y < maxY; y++)
-        for (var x = 1; x < maxX; x++) {
+        foreach (var point in path) {
+            var x = point.X;
+            var y = point.Y;
             var initialCost = track[x, y];
-            if (initialCost == -1) {
-                continue;
-            }
 
             // #
             // .
@@ -181,19 +177,13 @@ internal static class Program {
         return arr[x, y];
     }
 
-    private static int Part2(short[,] track) {
+    private static int Part2(short[,] track, List<Point> path) {
         var sum = 0;
 
-        // Assume edges are walls, no point searching them
-        var maxY = track.GetLength(0) - 1;
-        var maxX = track.GetLength(1) - 1;
-        for (var y = 1; y < maxY; y++)
-        for (var x = 1; x < maxX; x++) {
+        foreach (var point in path) {
+            var x = point.X;
+            var y = point.Y;
             var initialCost = track[x, y];
-            if (initialCost == -1) {
-                continue;
-            }
-
             sum += FindCheats2Manhattan(track, x, y, initialCost);
         }
 
