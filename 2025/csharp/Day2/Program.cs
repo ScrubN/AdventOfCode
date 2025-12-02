@@ -131,15 +131,18 @@ internal static class Program {
         return digits;
     }
 
+    private static readonly int[] FactorScratch = new int[30];
+
     private static int[] Factors(int number) {
-        var factors = new List<int>();
+        var factors = 0;
 
         for (var i = 2; i <= number; i++) {
             if (number % i == 0) {
-                factors.Add(i);
+                FactorScratch[factors] = i;
+                factors++;
             }
         }
 
-        return factors.ToArray();
+        return FactorScratch.AsSpan(0, factors).ToArray();
     }
 }
