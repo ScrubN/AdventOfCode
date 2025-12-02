@@ -102,15 +102,15 @@ internal static class Program {
     private static bool HasRepeatingSequence(ReadOnlySpan<char> str, int divisions) {
         Debug.Assert(str.Length % divisions == 0);
 
-        var divisionLen =  str.Length / divisions;
+        var divisionLen = str.Length / divisions;
 
-        var last = str[..divisionLen];
+        var pattern = str[..divisionLen];
         for (var i = 1; i < divisions; i++) {
             var start = divisionLen * i;
             var end = start + divisionLen;
             var current = str[start..end];
 
-            if (!last.SequenceEqual(current)) {
+            if (!pattern.SequenceEqual(current)) {
                 return false;
             }
         }
