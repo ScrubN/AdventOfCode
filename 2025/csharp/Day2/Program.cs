@@ -16,15 +16,15 @@ internal static class Program {
     }
 
     private static List<Range> GetIdRanges() {
-        var input = File.ReadAllText("Inputs.txt")
-            .Split(',');
+        var input = File.ReadAllText("Inputs.txt");
 
         var idRanges = new List<Range>();
-        foreach (var str in input) {
+        foreach (var range in input.AsSpan().Split(',')) {
+            var str = input.AsSpan(range);
             var separator = str.IndexOf('-');
 
-            var startId = long.Parse(str.AsSpan(0, separator));
-            var endId = long.Parse(str.AsSpan(separator + 1));
+            var startId = long.Parse(str[..separator]);
+            var endId = long.Parse(str[(separator + 1)..]);
 
             idRanges.Add(new Range(startId, endId));
         }
@@ -84,9 +84,10 @@ internal static class Program {
         return sum;
     }
 
-    private static bool IsInvalidIdPart2(int digits, long id, int[] digitFactors) {
+    private static bool IsInvalidIdPart2(int digits, long id, ReadOnlySpan<int> digitFactors) {
         Span<char> str = stackalloc char[digits];
         var success = id.TryFormat(str, out var written);
+
         Debug.Assert(success);
         Debug.Assert(str.Length == written);
 
@@ -100,6 +101,7 @@ internal static class Program {
     }
 
     private static bool HasRepeatingSequence(ReadOnlySpan<char> str, int divisions) {
+        Debug.Assert(divisions > 1);
         Debug.Assert(str.Length % divisions == 0);
 
         var divisionLen = str.Length / divisions;

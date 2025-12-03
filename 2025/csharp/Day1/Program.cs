@@ -8,22 +8,24 @@ internal static class Program {
         Right
     }
 
-    public static void Main(string[] args) {
-        var data = GetTurns();
+    public record struct Turn(Direction Direction, int Count);
 
-        var part1 = CountZeroes(data);
-        var part2 = CountZeroClicks(data);
+    public static void Main(string[] args) {
+        var turns = GetTurns();
+
+        var part1 = CountZeroes(turns);
+        var part2 = CountZeroClicks(turns);
 
         Console.WriteLine($"Part 1: {part1}");
         Console.WriteLine($"Part 2: {part2}");
     }
 
-    private static List<(Direction, int)> GetTurns() {
-        var turns = new List<(Direction, int)>();
+    private static List<Turn> GetTurns() {
+        var turns = new List<Turn>();
 
         using var sr = new StreamReader("Inputs.txt");
         while (sr.ReadLine() is { } line) {
-            turns.Add((
+            turns.Add(new Turn(
                 line[0] switch {
                     'L' => Direction.Left,
                     'R' => Direction.Right,
@@ -36,22 +38,23 @@ internal static class Program {
         return turns;
     }
 
-    public static int CountZeroes(List<(Direction, int)> data) {
+    public static int CountZeroes(List<Turn> turns) {
         var zeroes = 0;
 
         var dial = 50;
-        foreach (var (direction, count) in data)
-        {
+        foreach (var (direction, count) in turns) {
             dial +=
                 direction == Direction.Right
-                ? count
-                : -count;
+                    ? count
+                    : -count;
 
-            while (dial > 99)
+            while (dial > 99) {
                 dial -= 100;
+            }
 
-            while (dial < 0)
+            while (dial < 0) {
                 dial += 100;
+            }
 
             if (dial == 0) {
                 zeroes++;
@@ -61,23 +64,25 @@ internal static class Program {
         return zeroes;
     }
 
-    public static int CountZeroClicks(List<(Direction, int)> data) {
+    public static int CountZeroClicks(List<Turn> turns) {
         var zeroes = 0;
 
         var dial = 50;
-        foreach (var (direction, count) in data) {
+        foreach (var (direction, count) in turns) {
             for (var i = 0; i < count; i++) {
-                var turn = direction == Direction.Right
-                    ? 1
-                    : -1;
+                var turn =
+                    direction == Direction.Right
+                        ? 1
+                        : -1;
 
                 dial += turn;
 
-                while (dial > 99)
+                if (dial > 99) {
                     dial -= 100;
-
-                while (dial < 0)
+                }
+                else if (dial < 0) {
                     dial += 100;
+                }
 
                 if (dial == 0) {
                     zeroes++;
