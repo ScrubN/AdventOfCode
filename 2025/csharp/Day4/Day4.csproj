@@ -13,4 +13,8 @@
       </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="CommunityToolkit.HighPerformance" />
+    </ItemGroup>
+
 </Project>

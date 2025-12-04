@@ -1,14 +1,16 @@
-﻿namespace Day4;
+﻿using CommunityToolkit.HighPerformance;
+
+namespace Day4;
 
 internal static class Program {
     public static void Main(string[] args) {
         var data = GetData();
 
         var part1 = Part1(data);
-        // var part2 = Part2(data);
+        var part2 = Part2(data);
 
         Console.WriteLine($"Part 1: {part1}");
-        // Console.WriteLine($"Part 2: {part2}");
+        Console.WriteLine($"Part 2: {part2}");
     }
 
     private static bool[,] GetData() {
@@ -46,7 +48,39 @@ internal static class Program {
         return count;
     }
 
-    public static bool IsValidTile(int xLen, int yLen, int x, int y, bool[,] data, int maxAdjacent) {
+    private static int Part2(bool[,] data) {
+        var startingRolls = data.Count(true);
+
+        var yLen = data.GetLength(1);
+        var xLen = data.GetLength(0);
+
+        var data2 = new bool[yLen, xLen];
+        while (true) {
+            var removed = false;
+
+            data.AsSpan2D().CopyTo(data2);
+            for (var y = 0; y < yLen; y++)
+            for (var x = 0; x < xLen; x++) {
+                if (!data[y, x]) {
+                    continue;
+                }
+
+                if (IsValidTile(xLen, yLen, x, y, data2, 3)) {
+                    data[y, x] = false;
+                    removed = true;
+                }
+            }
+
+            if (!removed) {
+                break;
+            }
+        }
+
+        var endingRolls = data.Count(true);
+        return startingRolls - endingRolls;
+    }
+
+    private static bool IsValidTile(int xLen, int yLen, int x, int y, bool[,] data, int maxAdjacent) {
         var adjacent = 0;
 
         for (var i = -1; i <= 1 ; i++)
