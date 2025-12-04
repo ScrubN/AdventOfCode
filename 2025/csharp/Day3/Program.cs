@@ -5,10 +5,10 @@ internal static class Program {
         var batteries = GetBatteries();
 
         var part1 = Part1(batteries);
-        // var part2 = Part2(batteries);
+        var part2 = Part2(batteries);
 
         Console.WriteLine($"Part 1: {part1}");
-        // Console.WriteLine($"Part 2: {part2}");
+        Console.WriteLine($"Part 2: {part2}");
     }
 
     private static List<int[]> GetBatteries() {
@@ -50,5 +50,38 @@ internal static class Program {
         }
 
         return max;
+    }
+
+    private static long Part2(List<int[]> batteries) {
+        var sum = 0L;
+
+        foreach (var battery in batteries) {
+            sum += TurnOnBatteriesPart2(battery);
+        }
+
+        return sum;
+    }
+
+    private static long TurnOnBatteriesPart2(int[] battery) {
+        const int DEPTH = 12;
+
+        var mutableBattery = battery.ToArray();
+
+        var num = 0L;
+        var taken = 0;
+        for (var i = 0; i < DEPTH; i++) {
+            var (maxIdx, value) = mutableBattery
+                .Index()
+                .Skip(taken)
+                .SkipLast(DEPTH - 1 - i)
+                .MaxBy(x => x.Item);
+
+            num *= 10;
+            num += value;
+            mutableBattery[maxIdx] = 0;
+            taken = Math.Max(taken, maxIdx);
+        }
+
+        return num;
     }
 }
