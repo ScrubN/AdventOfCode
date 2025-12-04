@@ -17,11 +17,9 @@ internal static class Program {
         var lines = File.ReadAllLines("Inputs.txt");
         var data = new bool[lines.Length, lines[0].Length];
 
-        for (var y = 0; y < lines.Length; y++)
-        {
+        for (var y = 0; y < lines.Length; y++) {
             var line = lines[y];
-            for (var x = 0; x < line.Length; x++)
-            {
+            for (var x = 0; x < line.Length; x++) {
                 data[x, y] = line[x] == '@';
             }
         }
@@ -83,8 +81,8 @@ internal static class Program {
     private static bool IsValidTile(int xLen, int yLen, int x, int y, bool[,] data, int maxAdjacent) {
         var adjacent = 0;
 
-        for (var i = -1; i <= 1 ; i++)
-        for (var j =-1; j <= 1 ; j++) {
+        for (var i = -1; i <= 1; i++)
+        for (var j = -1; j <= 1; j++) {
             if (i == 0 && j == 0) {
                 continue;
             }
