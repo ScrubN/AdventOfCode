@@ -2,8 +2,38 @@
 
 internal static class Program {
     public readonly record struct Range(long Start, long End) {
-        public bool IsInRange(long num) {
+        public long Count => End - Start + 1;
+
+        public bool HasValue(long num) {
             return Start <= num && num <= End;
+        }
+
+        public bool TryCombine(Range other, out Range combined) {
+            // S1       E1
+            //    S2      E2
+            if (Start <= other.Start) {
+                // S1  E1
+                //        S2  E2
+                if (End < other.Start) {
+                    combined = default;
+                    return false;
+                }
+
+                combined = new Range(Start, Math.Max(End, other.End));
+                return true;
+            }
+
+            //         S1    E1
+            // S2   E2
+            if (other.End < Start) {
+                combined = default;
+                return false;
+            }
+
+            //    S1    E1
+            // S2    E2
+            combined = new Range(other.Start, Math.Max(End, other.End));
+            return true;
         }
     }
 
@@ -11,10 +41,10 @@ internal static class Program {
         var (ranges, ids) = GetIdRanges();
 
         var part1 = Part1(ranges, ids);
-        // var part2 = Part2(ranges, ids);
+        var part2 = Part2(ranges);
 
         Console.WriteLine($"Part 1: {part1}");
-        // Console.WriteLine($"Part 2: {part2}");
+        Console.WriteLine($"Part 2: {part2}");
     }
 
     private static (List<Range> idRanges, List<long> ids) GetIdRanges() {
@@ -35,7 +65,36 @@ internal static class Program {
             ids.Add(long.Parse(line));
         }
 
-        return (ranges, ids);
+        var ranges2 = ranges;
+        while (true) {
+            var combined = CombineRanges(ranges2);
+            if (combined.Count == ranges2.Count) {
+                break;
+            }
+
+            ranges2 = combined;
+        }
+
+        return (ranges2, ids);
+    }
+
+    private static List<Range> CombineRanges(List<Range> source) {
+        var newRanges = new List<Range>(source.Count / 2);
+
+        foreach (var range in source) {
+            for (var i = 0; i < newRanges.Count; i++) {
+                if (newRanges[i].TryCombine(range, out var combined)) {
+                    newRanges[i] = combined;
+                    goto NextRange;
+                }
+            }
+
+            newRanges.Add(range);
+
+            NextRange: ;
+        }
+
+        return newRanges;
     }
 
     private static long Part1(List<Range> ranges, List<long> ids) {
@@ -43,7 +102,7 @@ internal static class Program {
 
         foreach (var id in ids) {
             foreach (var range in ranges) {
-                if (range.IsInRange(id)) {
+                if (range.HasValue(id)) {
                     count++;
                     break;
                 }
@@ -51,5 +110,15 @@ internal static class Program {
         }
 
         return count;
+    }
+
+    private static long Part2(List<Range> ranges) {
+        var sum = 0L;
+
+        foreach (var range in ranges) {
+            sum += range.Count;
+        }
+
+        return sum;
     }
 }
