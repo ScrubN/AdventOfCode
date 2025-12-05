@@ -16,8 +16,11 @@ internal static class Program {
 
         using var sr = new StreamReader("Inputs.txt");
         while (sr.ReadLine() is { } line) {
-            batteries.Add(line.Select(x => int.Parse([x]))
-                .ToArray());
+            batteries.Add(
+                line
+                    .Select(x => int.Parse([x]))
+                    .ToArray()
+            );
         }
 
         return batteries;
@@ -34,22 +37,16 @@ internal static class Program {
     }
 
     private static int TurnOnBatteriesPart1(int[] battery) {
-        var max = 0;
+        var (idx, left) = battery
+            .Index()
+            .SkipLast(1)
+            .MaxBy(x => x.Item);
 
-        for (var i = 0; i < battery.Length - 1; i++) {
-            var left = battery[i] * 10;
+        var right = battery
+            .Skip(idx + 1)
+            .Max();
 
-            for (var j = i + 1; j < battery.Length; j++) {
-                var right = battery[j];
-
-                var sum = left + right;
-                if (sum > max) {
-                    max = sum;
-                }
-            }
-        }
-
-        return max;
+        return left * 10 + right;
     }
 
     private static long Part2(List<int[]> batteries) {
@@ -65,21 +62,19 @@ internal static class Program {
     private static long TurnOnBatteriesPart2(int[] battery) {
         const int DEPTH = 12;
 
-        var mutableBattery = battery.ToArray();
-
         var num = 0L;
-        var taken = 0;
+        var start = 0;
         for (var i = 0; i < DEPTH; i++) {
-            var (maxIdx, value) = mutableBattery
+            var (idx, value) = battery
                 .Index()
-                .Skip(taken)
+                .Skip(start)
                 .SkipLast(DEPTH - 1 - i)
                 .MaxBy(x => x.Item);
 
             num *= 10;
             num += value;
-            mutableBattery[maxIdx] = 0;
-            taken = Math.Max(taken, maxIdx);
+            battery[idx] = 0;
+            start = idx;
         }
 
         return num;

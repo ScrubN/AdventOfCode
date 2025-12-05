@@ -48,15 +48,7 @@ internal static class Program {
                     ? count
                     : -count;
 
-            while (dial > 99) {
-                dial -= 100;
-            }
-
-            while (dial < 0) {
-                dial += 100;
-            }
-
-            if (dial == 0) {
+            if (dial % 100 == 0) {
                 zeroes++;
             }
         }
@@ -69,20 +61,14 @@ internal static class Program {
 
         var dial = 50;
         foreach (var (direction, count) in turns) {
+            var turn =
+                direction == Direction.Right
+                    ? 1
+                    : -1;
+
             for (var i = 0; i < count; i++) {
-                var turn =
-                    direction == Direction.Right
-                        ? 1
-                        : -1;
-
                 dial += turn;
-
-                if (dial > 99) {
-                    dial -= 100;
-                }
-                else if (dial < 0) {
-                    dial += 100;
-                }
+                dial %= 100;
 
                 if (dial == 0) {
                     zeroes++;

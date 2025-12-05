@@ -34,7 +34,7 @@ internal static class Program {
         var xLen = data.GetLength(0);
         for (var y = 0; y < yLen; y++)
         for (var x = 0; x < xLen; x++) {
-            if (!data[y, x]) {
+            if (!data[x, y]) {
                 continue;
             }
 
@@ -47,24 +47,24 @@ internal static class Program {
     }
 
     private static int Part2(bool[,] data) {
-        var startingRolls = data.Count(true);
-
         var yLen = data.GetLength(1);
         var xLen = data.GetLength(0);
 
-        var data2 = new bool[yLen, xLen];
+        var grid = new bool[yLen, xLen];
+        data.AsSpan2D().CopyTo(grid);
+
+        var startingRolls = grid.Count(true);
         while (true) {
             var removed = false;
 
-            data.AsSpan2D().CopyTo(data2);
             for (var y = 0; y < yLen; y++)
             for (var x = 0; x < xLen; x++) {
-                if (!data[y, x]) {
+                if (!grid[x, y]) {
                     continue;
                 }
 
-                if (IsValidTile(xLen, yLen, x, y, data2, 3)) {
-                    data[y, x] = false;
+                if (IsValidTile(xLen, yLen, x, y, grid, 3)) {
+                    grid[x, y] = false;
                     removed = true;
                 }
             }
@@ -74,11 +74,11 @@ internal static class Program {
             }
         }
 
-        var endingRolls = data.Count(true);
+        var endingRolls = grid.Count(true);
         return startingRolls - endingRolls;
     }
 
-    private static bool IsValidTile(int xLen, int yLen, int x, int y, bool[,] data, int maxAdjacent) {
+    private static bool IsValidTile(int xLen, int yLen, int x, int y, bool[,] grid, int maxAdjacent) {
         var adjacent = 0;
 
         for (var i = -1; i <= 1; i++)
@@ -87,13 +87,13 @@ internal static class Program {
                 continue;
             }
 
-            var aX = x + i;
-            var aY = y + j;
-            if (aX < 0 || aX >= xLen || aY < 0 || aY >= yLen) {
+            var dX = x + i;
+            var dY = y + j;
+            if (dX < 0 || dX >= xLen || dY < 0 || dY >= yLen) {
                 continue;
             }
 
-            if (!data[aY, aX]) {
+            if (!grid[dX, dY]) {
                 continue;
             }
 

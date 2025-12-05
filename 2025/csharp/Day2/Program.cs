@@ -61,9 +61,8 @@ internal static class Program {
         return upper == lower;
     }
 
-
     private static long SumInvalidIdsPart2(List<Range> data) {
-        var digitFactors = Enumerable.Range(0, 30)
+        var digitFactors = Enumerable.Range(0, CountDigits(long.MaxValue))
             .Select(Factors)
             .ToArray();
 
@@ -92,7 +91,7 @@ internal static class Program {
         Debug.Assert(str.Length == written);
 
         foreach (var factor in digitFactors) {
-            if (HasRepeatingSequence(str, factor)) {
+            if (HasRepeatingSequence(str, divisions: factor)) {
                 return true;
             }
         }
@@ -133,16 +132,18 @@ internal static class Program {
         return digits;
     }
 
-    private static readonly int[] FactorScratch = new int[30];
+    private static readonly int[] FactorScratch = new int[CountDigits(int.MaxValue)];
 
     private static int[] Factors(int number) {
         var factors = 0;
 
         for (var i = 2; i <= number; i++) {
-            if (number % i == 0) {
-                FactorScratch[factors] = i;
-                factors++;
+            if (number % i != 0) {
+                continue;
             }
+
+            FactorScratch[factors] = i;
+            factors++;
         }
 
         return FactorScratch.AsSpan(0, factors).ToArray();
