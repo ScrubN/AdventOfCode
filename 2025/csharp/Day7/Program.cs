@@ -13,9 +13,10 @@ internal static class Program {
         var data = GetData();
 
         var part1 = Part1(data);
+        var part2 = Part2(data);
 
         Console.WriteLine($"Part 1: {part1}");
-        // Console.WriteLine($"Part 2: {part2}");
+        Console.WriteLine($"Part 2: {part2}");
     }
 
     private static string[] GetData() {
@@ -23,10 +24,10 @@ internal static class Program {
     }
 
     private static int Part1(string[] data) {
-        var start = data[0].IndexOf('S');
+        var start = new Point(data[0].IndexOf('S'), 0);
         var splits = new HashSet<Point>();
 
-        CountSplits(new Point(start, 1), splits, data);
+        CountSplits(start, splits, data);
 
         return splits.Count;
     }
@@ -36,18 +37,54 @@ internal static class Program {
             return;
         }
 
-        if (splits.Contains(p)) {
+        while (data.At(p) != '^') {
+            p = p with { Y = p.Y + 1 };
+
+            if (p.Y >= data.Length) {
+                return;
+            }
+        }
+
+        if (!splits.Add(p)) {
             return;
         }
 
-        if (data.At(p) == '^') {
-            splits.Add(p);
+        CountSplits(new Point(p.X - 1, p.Y + 1), splits, data);
+        CountSplits(new Point(p.X + 1, p.Y + 1), splits, data);
+    }
 
-            CountSplits(p with { X = p.X - 1 },  splits, data);
-            CountSplits(p with { X = p.X + 1 },  splits, data);
+    private static long Part2(string[] data) {
+        var start = new Point(data[0].IndexOf('S'), 0);
+
+        return CountChildren(start, data, []);
+    }
+
+    private static long CountChildren(Point p, string[] data, Dictionary<Point, long> costs) {
+        if (p.X < 0 || p.X >= data[0].Length) {
+            return 0;
         }
-        else {
-            CountSplits(p with{ Y = p.Y + 1}, splits, data);
+
+        if (p.Y >= data.Length) {
+            return 1;
         }
+
+        while (data.At(p) != '^') {
+            p = p with { Y = p.Y + 1 };
+
+            if (p.Y >= data.Length) {
+                return 1;
+            }
+        }
+
+        if (costs.TryGetValue(p, out var visitedCost)) {
+            return visitedCost;
+        }
+
+        var left = CountChildren(new Point(p.X - 1, p.Y + 1), data, costs);
+        var right = CountChildren(new Point(p.X + 1, p.Y + 1), data, costs);
+        var cost = left + right;
+
+        costs.Add(p, cost);
+        return cost;
     }
 }
